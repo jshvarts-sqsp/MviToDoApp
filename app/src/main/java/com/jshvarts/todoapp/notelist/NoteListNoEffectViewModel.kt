@@ -30,11 +30,11 @@ class NoteListNoEffectViewModel @Inject constructor(
     if (isStateInBundle()) return
 
     when (action) {
-      NoteListUiAction.LoadList -> handleLoadList()
+      NoteListUiAction.LoadList -> onLoadList()
     }
   }
 
-  private fun handleLoadList() {
+  private fun onLoadList() {
     viewModelScope.launch {
       noteRepository
         .getNotes().asUiResult()

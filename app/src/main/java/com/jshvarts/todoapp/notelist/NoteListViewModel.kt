@@ -32,15 +32,14 @@ class NoteListViewModel @Inject constructor(
     if (isStateInBundle()) return
 
     when (action) {
-      NoteListUiAction.LoadList -> handleLoadList()
+      NoteListUiAction.LoadList -> onLoadList()
     }
   }
 
-  private fun handleLoadList() {
+  private fun onLoadList() {
     viewModelScope.launch {
       noteRepository
-        .getNotes()
-        .asUiResult()
+        .getNotes().asUiResult()
         .onStart { mutableUiEffect.emit(NoteListUiEffect.MessageDataLoading) } // example of emitting an effect
         .collect { result ->
           savedStateHandle[SAVED_STATE_HANDLE_KEY] = when (result) {
