@@ -17,36 +17,36 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NoteListNoStateHandleNoEffectViewModel @Inject constructor(
-  private val noteRepository: NoteRepository,
+    private val noteRepository: NoteRepository
 ) : MviViewModel<NoteListUiAction, NoteListUiState, Nothing>() {
 
-  override val initialState: NoteListUiState
-    get() = NoteListUiState.Loading
+    override val initialState: NoteListUiState
+        get() = NoteListUiState.Loading
 
-  override val savedStateHandleKey = null
+    override val savedStateHandleKey = null
 
-  override val actionHandler: (NoteListUiAction) -> Unit = {
-    when (it) {
-      NoteListUiAction.LoadList -> onLoadList()
-    }
-  }
-
-  private val _uiState = MutableStateFlow(initialState)
-  val uiState: StateFlow<NoteListUiState> = _uiState.asStateFlow()
-
-  private fun onLoadList() {
-    viewModelScope.launch {
-      noteRepository
-        .getNotes().asUiResult()
-        .collect { result ->
-          _uiState.update {
-            when (result) {
-              is UiResult.Loading -> NoteListUiState.Loading
-              is UiResult.Success -> NoteListUiState.Success(result.data)
-              is UiResult.Error -> NoteListUiState.Error(result.exception)
-            }
-          }
+    override fun handleAction(action: NoteListUiAction) {
+        when (action) {
+            NoteListUiAction.LoadList -> onLoadList()
         }
     }
-  }
+
+    private val _uiState = MutableStateFlow(initialState)
+    override val uiState: StateFlow<NoteListUiState> = _uiState.asStateFlow()
+
+    private fun onLoadList() {
+        viewModelScope.launch {
+            noteRepository
+                .getNotes().asUiResult()
+                .collect { result ->
+                    _uiState.update {
+                        when (result) {
+                            is UiResult.Loading -> NoteListUiState.Loading
+                            is UiResult.Success -> NoteListUiState.Success(result.data)
+                            is UiResult.Error -> NoteListUiState.Error(result.exception)
+                        }
+                    }
+                }
+        }
+    }
 }
