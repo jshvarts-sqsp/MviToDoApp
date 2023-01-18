@@ -23,6 +23,7 @@ abstract class MviViewModel<A : UiAction, S : UiState, E : UiEffect>(
     } else false
 
   override fun dispatchAction(action: A, block: () -> Unit) {
+    // skip processing action if state is already in Bundle
     return if (isStateInBundle) Unit else block.invoke()
   }
 }
