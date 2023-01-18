@@ -28,7 +28,7 @@ class NoteListViewModel @Inject constructor(
   override val savedStateHandleKey: String
     get() = SAVED_STATE_HANDLE_KEY
 
-  override val actionReducer: (NoteListUiAction) -> Unit = {
+  override val actionHandler: (NoteListUiAction) -> Unit = {
     when (it) {
       NoteListUiAction.LoadList -> onLoadList()
     }
@@ -40,7 +40,7 @@ class NoteListViewModel @Inject constructor(
   val uiEffect: SharedFlow<NoteListUiEffect> = _uiEffect.asSharedFlow()
 
   override fun dispatchAction(action: NoteListUiAction) {
-    actionReducer.invoke(action)
+    actionHandler.invoke(action)
   }
 
   private fun onLoadList() {

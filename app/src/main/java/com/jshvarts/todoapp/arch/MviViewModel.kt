@@ -15,7 +15,7 @@ abstract class MviViewModel<A : UiAction, S : UiState, E : UiEffect>(
 ) : ViewModel(), ActionDispatcher<A> {
   abstract val initialState: S
   abstract val savedStateHandleKey: String?
-  abstract val actionReducer: (A) -> Unit
+  abstract val actionHandler: (A) -> Unit
 
   private val isStateInBundle: Boolean
     get() = if (savedStateHandleKey != null && savedStateHandle != null) {

@@ -25,7 +25,7 @@ class NoteListNoStateHandleNoEffectViewModel @Inject constructor(
 
   override val savedStateHandleKey = null
 
-  override val actionReducer: (NoteListUiAction) -> Unit = {
+  override val actionHandler: (NoteListUiAction) -> Unit = {
     when (it) {
       NoteListUiAction.LoadList -> onLoadList()
     }
@@ -35,7 +35,7 @@ class NoteListNoStateHandleNoEffectViewModel @Inject constructor(
   val uiState: StateFlow<NoteListUiState> = _uiState.asStateFlow()
 
   override fun dispatchAction(action: NoteListUiAction) {
-    actionReducer.invoke(action)
+    actionHandler.invoke(action)
   }
 
   private fun onLoadList() {
