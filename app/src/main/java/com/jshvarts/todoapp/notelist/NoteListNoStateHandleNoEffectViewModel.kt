@@ -34,10 +34,6 @@ class NoteListNoStateHandleNoEffectViewModel @Inject constructor(
   private val _uiState = MutableStateFlow(initialState)
   val uiState: StateFlow<NoteListUiState> = _uiState.asStateFlow()
 
-  override fun dispatchAction(action: NoteListUiAction) {
-    actionHandler.invoke(action)
-  }
-
   private fun onLoadList() {
     viewModelScope.launch {
       noteRepository

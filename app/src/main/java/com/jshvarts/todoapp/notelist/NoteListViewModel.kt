@@ -34,14 +34,11 @@ class NoteListViewModel @Inject constructor(
     }
   }
 
-  val uiState: StateFlow<NoteListUiState> = savedStateHandle.getStateFlow(savedStateHandleKey, initialState)
+  val uiState: StateFlow<NoteListUiState> =
+    savedStateHandle.getStateFlow(savedStateHandleKey, initialState)
 
   private val _uiEffect = MutableSharedFlow<NoteListUiEffect>()
   val uiEffect: SharedFlow<NoteListUiEffect> = _uiEffect.asSharedFlow()
-
-  override fun dispatchAction(action: NoteListUiAction) {
-    actionHandler.invoke(action)
-  }
 
   private fun onLoadList() {
     viewModelScope.launch {
