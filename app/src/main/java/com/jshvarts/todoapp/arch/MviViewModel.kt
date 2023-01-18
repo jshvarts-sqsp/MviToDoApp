@@ -2,38 +2,27 @@ package com.jshvarts.todoapp.arch
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.SharedFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 
 /**
- * If [UiEffect] is not applicable to a particular [ViewModel], pass [Nothing]:
+ * If [UiEffect] is not applicable to a particular [ViewModel], pass [Nothing] when extending:
  * e.g.
  * ```
- * class MyViewModel @Inject constructor(
- *   private val savedStateHandle: SavedStateHandle,
- * ) : MviViewModel<NoteListUiAction, NoteListUiState, Nothing>(savedStateHandle) {
+ * MviViewModel<NoteListUiAction, NoteListUiState, Nothing>(savedStateHandle)
  * ```
  */
 abstract class MviViewModel<A : UiAction, S : UiState, E : UiEffect>(
-  private val savedStateHandle: SavedStateHandle
-) : ViewModel() {
+  private val savedStateHandle: SavedStateHandle? = null
+) : ViewModel(), ActionDispatcher<A> {
   abstract val initialState: S
-  protected abstract val savedStateHandleKey: String
+  abstract val savedStateHandleKey: String?
+  abstract val actionReducer: (A) -> Unit
 
-  val uiState: StateFlow<S> = savedStateHandle.getStateFlow(savedStateHandleKey, initialState)
+  private val isStateInBundle: Boolean
+    get() = if (savedStateHandleKey != null && savedStateHandle != null) {
+      initialState != savedStateHandle[savedStateHandleKey!!]
+    } else false
 
-  protected val mutableUiEffect = MutableSharedFlow<E>()
-  val uiEffect: SharedFlow<E> = mutableUiEffect.asSharedFlow()
-
-  abstract fun dispatchAction(action: A)
-
-  /**
-   * To be called when dispatchAction(A) is entered.
-   * If true, no need to produce new state--one from bundle will be used
-   */
-  protected fun isStateInBundle(): Boolean {
-    return initialState != savedStateHandle[savedStateHandleKey]
+  override fun dispatchAction(action: A, block: () -> Unit) {
+    return if (isStateInBundle) Unit else block.invoke()
   }
 }

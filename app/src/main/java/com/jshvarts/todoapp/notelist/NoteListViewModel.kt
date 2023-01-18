@@ -10,7 +10,7 @@ import com.jshvarts.todoapp.notelist.ui.NoteListUiAction
 import com.jshvarts.todoapp.notelist.ui.NoteListUiEffect
 import com.jshvarts.todoapp.notelist.ui.NoteListUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -28,19 +28,26 @@ class NoteListViewModel @Inject constructor(
   override val savedStateHandleKey: String
     get() = SAVED_STATE_HANDLE_KEY
 
-  override fun dispatchAction(action: NoteListUiAction) {
-    if (isStateInBundle()) return
-
-    when (action) {
+  override val actionReducer: (NoteListUiAction) -> Unit = {
+    when (it) {
       NoteListUiAction.LoadList -> onLoadList()
     }
+  }
+
+  val uiState: StateFlow<NoteListUiState> = savedStateHandle.getStateFlow(savedStateHandleKey, initialState)
+
+  private val _uiEffect = MutableSharedFlow<NoteListUiEffect>()
+  val uiEffect: SharedFlow<NoteListUiEffect> = _uiEffect.asSharedFlow()
+
+  override fun dispatchAction(action: NoteListUiAction) {
+    actionReducer.invoke(action)
   }
 
   private fun onLoadList() {
     viewModelScope.launch {
       noteRepository
         .getNotes().asUiResult()
-        .onStart { mutableUiEffect.emit(NoteListUiEffect.MessageDataLoading) } // example of emitting an effect
+        .onStart { _uiEffect.emit(NoteListUiEffect.MessageDataLoading) } // example of emitting an effect
         .collect { result ->
           savedStateHandle[SAVED_STATE_HANDLE_KEY] = when (result) {
             is UiResult.Loading -> NoteListUiState.Loading
