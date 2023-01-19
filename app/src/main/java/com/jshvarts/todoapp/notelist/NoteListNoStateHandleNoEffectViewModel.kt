@@ -4,7 +4,7 @@ import androidx.lifecycle.viewModelScope
 import com.jshvarts.todoapp.arch.MviViewModel
 import com.jshvarts.todoapp.arch.UiResult
 import com.jshvarts.todoapp.arch.asUiResult
-import com.jshvarts.todoapp.notelist.data.NoteRepository
+import com.jshvarts.todoapp.data.NoteRepository
 import com.jshvarts.todoapp.notelist.ui.NoteListUiAction
 import com.jshvarts.todoapp.notelist.ui.NoteListUiState
 import dagger.hilt.android.lifecycle.HiltViewModel

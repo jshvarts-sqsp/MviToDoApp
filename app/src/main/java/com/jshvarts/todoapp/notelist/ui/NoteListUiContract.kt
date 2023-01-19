@@ -4,7 +4,7 @@ import android.os.Parcelable
 import com.jshvarts.todoapp.arch.UiAction
 import com.jshvarts.todoapp.arch.UiEffect
 import com.jshvarts.todoapp.arch.UiState
-import com.jshvarts.todoapp.notelist.data.Note
+import com.jshvarts.todoapp.data.Note
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.RawValue
 
