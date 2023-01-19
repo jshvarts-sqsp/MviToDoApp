@@ -20,7 +20,8 @@ private const val SAVED_STATE_HANDLE_KEY = "NoteListViewModel_uiState_Key"
 class NoteListViewModel @Inject constructor(
   private val savedStateHandle: SavedStateHandle,
   private val noteRepository: NoteRepository
-) : MviViewModel<NoteListUiAction, NoteListUiState, NoteListUiEffect>(savedStateHandle) {
+) : MviViewModel<NoteListUiAction, NoteListUiState>(savedStateHandle),
+  MviViewModel.HasUiEffect<NoteListUiEffect> {
 
   override val initialState: NoteListUiState
     get() = NoteListUiState.Loading

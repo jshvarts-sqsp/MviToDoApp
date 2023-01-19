@@ -8,14 +8,17 @@ import com.jshvarts.todoapp.notelist.data.NoteRepository
 import com.jshvarts.todoapp.notelist.ui.NoteListUiAction
 import com.jshvarts.todoapp.notelist.ui.NoteListUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NoteListNoStateHandleNoEffectViewModel @Inject constructor(
   private val noteRepository: NoteRepository
-) : MviViewModel<NoteListUiAction, NoteListUiState, Nothing>() {
+) : MviViewModel<NoteListUiAction, NoteListUiState>() {
 
   override val initialState: NoteListUiState
     get() = NoteListUiState.Loading
@@ -30,9 +33,6 @@ class NoteListNoStateHandleNoEffectViewModel @Inject constructor(
 
   private val _uiState = MutableStateFlow(initialState)
   override val uiState: StateFlow<NoteListUiState> = _uiState.asStateFlow()
-
-  private val _uiEffect = MutableSharedFlow<Nothing>()
-  override val uiEffect: SharedFlow<Nothing> = _uiEffect.asSharedFlow()
 
   private fun onLoadList() {
     viewModelScope.launch {
