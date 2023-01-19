@@ -2,27 +2,29 @@ package com.jshvarts.todoapp.arch
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
 
-/**
- * If [UiEffect] is not applicable to a particular [ViewModel], pass [Nothing] when extending:
- * e.g.
- * ```
- * MviViewModel<NoteListUiAction, NoteListUiState, Nothing>(savedStateHandle)
- * ```
- */
-abstract class MviViewModel<A : UiAction, S : UiState, E : UiEffect>(
+abstract class MviViewModel<A : UiAction, S : UiState>(
   private val savedStateHandle: SavedStateHandle? = null
-) : ViewModel(), ActionDispatcher<A> {
-  abstract val initialState: S
-  abstract val savedStateHandleKey: String?
-  abstract val actionHandler: (A) -> Unit
+) : ViewModel() {
+  protected abstract val initialState: S
+
+  abstract val uiState: StateFlow<S>
+
+  protected abstract val savedStateHandleKey: String?
+  protected abstract fun handleAction(action: A)
 
   private val isStateInBundle: Boolean
     get() = if (savedStateHandleKey != null && savedStateHandle != null) {
       initialState != savedStateHandle[savedStateHandleKey!!]
     } else false
 
-  override fun dispatchAction(action: A) {
-    return if (isStateInBundle) Unit else actionHandler.invoke(action)
+  fun dispatchAction(action: A) {
+    return if (isStateInBundle) Unit else handleAction(action)
+  }
+
+  interface HasUiEffect<E : UiEffect> {
+    val uiEffect: SharedFlow<E>
   }
 }

@@ -17,22 +17,22 @@ import javax.inject.Inject
 
 @HiltViewModel
 class NoteListNoStateHandleNoEffectViewModel @Inject constructor(
-  private val noteRepository: NoteRepository,
-) : MviViewModel<NoteListUiAction, NoteListUiState, Nothing>() {
+  private val noteRepository: NoteRepository
+) : MviViewModel<NoteListUiAction, NoteListUiState>() {
 
   override val initialState: NoteListUiState
     get() = NoteListUiState.Loading
 
   override val savedStateHandleKey = null
 
-  override val actionHandler: (NoteListUiAction) -> Unit = {
-    when (it) {
+  override fun handleAction(action: NoteListUiAction) {
+    when (action) {
       NoteListUiAction.LoadList -> onLoadList()
     }
   }
 
   private val _uiState = MutableStateFlow(initialState)
-  val uiState: StateFlow<NoteListUiState> = _uiState.asStateFlow()
+  override val uiState: StateFlow<NoteListUiState> = _uiState.asStateFlow()
 
   private fun onLoadList() {
     viewModelScope.launch {

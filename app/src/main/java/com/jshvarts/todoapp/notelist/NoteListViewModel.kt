@@ -19,8 +19,9 @@ private const val SAVED_STATE_HANDLE_KEY = "NoteListViewModel_uiState_Key"
 @HiltViewModel
 class NoteListViewModel @Inject constructor(
   private val savedStateHandle: SavedStateHandle,
-  private val noteRepository: NoteRepository,
-) : MviViewModel<NoteListUiAction, NoteListUiState, NoteListUiEffect>(savedStateHandle) {
+  private val noteRepository: NoteRepository
+) : MviViewModel<NoteListUiAction, NoteListUiState>(savedStateHandle),
+  MviViewModel.HasUiEffect<NoteListUiEffect> {
 
   override val initialState: NoteListUiState
     get() = NoteListUiState.Loading
@@ -28,17 +29,17 @@ class NoteListViewModel @Inject constructor(
   override val savedStateHandleKey: String
     get() = SAVED_STATE_HANDLE_KEY
 
-  override val actionHandler: (NoteListUiAction) -> Unit = {
-    when (it) {
+  override fun handleAction(action: NoteListUiAction) {
+    when (action) {
       NoteListUiAction.LoadList -> onLoadList()
     }
   }
 
-  val uiState: StateFlow<NoteListUiState> =
-    savedStateHandle.getStateFlow(savedStateHandleKey, initialState)
-
   private val _uiEffect = MutableSharedFlow<NoteListUiEffect>()
-  val uiEffect: SharedFlow<NoteListUiEffect> = _uiEffect.asSharedFlow()
+  override val uiEffect: SharedFlow<NoteListUiEffect> = _uiEffect.asSharedFlow()
+
+  override val uiState: StateFlow<NoteListUiState> =
+    savedStateHandle.getStateFlow(savedStateHandleKey, initialState)
 
   private fun onLoadList() {
     viewModelScope.launch {
