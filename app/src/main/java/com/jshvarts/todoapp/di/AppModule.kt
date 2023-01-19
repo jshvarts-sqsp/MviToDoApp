@@ -1,7 +1,7 @@
-package com.jshvarts.todoapp.notelist.di
+package com.jshvarts.todoapp.di
 
-import com.jshvarts.todoapp.notelist.data.InMemoryNoteRepository
-import com.jshvarts.todoapp.notelist.data.NoteRepository
+import com.jshvarts.todoapp.data.InMemoryNoteRepository
+import com.jshvarts.todoapp.data.NoteRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
