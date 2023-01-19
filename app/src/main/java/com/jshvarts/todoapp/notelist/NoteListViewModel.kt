@@ -21,7 +21,7 @@ class NoteListViewModel @Inject constructor(
   private val savedStateHandle: SavedStateHandle,
   private val noteRepository: NoteRepository
 ) : MviViewModel<NoteListUiAction, NoteListUiState>(savedStateHandle),
-  MviViewModel.HasUiEffect<NoteListUiEffect> {
+  MviViewModel.EffectProducer<NoteListUiEffect> {
 
   override val initialState: NoteListUiState
     get() = NoteListUiState.Loading

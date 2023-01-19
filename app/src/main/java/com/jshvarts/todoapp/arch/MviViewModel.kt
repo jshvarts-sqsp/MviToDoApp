@@ -24,7 +24,7 @@ abstract class MviViewModel<A : UiAction, S : UiState>(
     return if (isStateInBundle) Unit else handleAction(action)
   }
 
-  interface HasUiEffect<E : UiEffect> {
+  interface EffectProducer<E : UiEffect> {
     val uiEffect: SharedFlow<E>
   }
 }
