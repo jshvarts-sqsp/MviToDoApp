@@ -6,7 +6,6 @@ import com.jshvarts.todoapp.arch.UiEffect
 import com.jshvarts.todoapp.arch.UiState
 import com.jshvarts.todoapp.data.Note
 import kotlinx.parcelize.Parcelize
-import kotlinx.parcelize.RawValue
 
 sealed interface NoteDetailUiAction : UiAction {
   data class LoadNote(val id: String) : NoteDetailUiAction
@@ -17,7 +16,7 @@ sealed class NoteDetailUiState : UiState, Parcelable {
   object Loading : NoteDetailUiState()
 
   data class Success(
-    val note: @RawValue Note
+    val note: Note
   ) : NoteDetailUiState()
 
   data class Error(
