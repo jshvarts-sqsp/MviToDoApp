@@ -3,6 +3,7 @@ package com.jshvarts.todoapp
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,12 +16,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.rememberNavController
+import com.jshvarts.todoapp.notedetail.NoteDetailViewModel
+import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiAction
+import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiState
 import com.jshvarts.todoapp.notelist.NoteListViewModel
 import com.jshvarts.todoapp.notelist.ui.NoteListUiAction
 import com.jshvarts.todoapp.notelist.ui.NoteListUiState
+import com.jshvarts.todoapp.ui.navigation.NotesAppNavHost
 import com.jshvarts.todoapp.ui.theme.ToDoAppTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -32,7 +38,8 @@ class MainActivity : ComponentActivity() {
       ToDoAppTheme {
         // A surface container using the 'background' color from the theme
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
-          NoteListScreen()
+          val navController = rememberNavController()
+          NotesAppNavHost(navController)
         }
       }
     }
@@ -41,7 +48,11 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
-fun NoteListScreen(viewModel: NoteListViewModel = viewModel()) {
+fun NoteListScreen(
+  onNoteClick: (String) -> Unit,
+  modifier: Modifier = Modifier,
+  viewModel: NoteListViewModel = hiltViewModel()
+) {
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
   LaunchedEffect(Unit) {
@@ -50,8 +61,11 @@ fun NoteListScreen(viewModel: NoteListViewModel = viewModel()) {
 
   when (uiState) {
     NoteListUiState.Loading -> LoadingState()
-    is NoteListUiState.Success -> SuccessState(uiState as NoteListUiState.Success)
-    is NoteListUiState.Error -> ErrorState(uiState as NoteListUiState.Error)
+    is NoteListUiState.Success -> NoteListSuccessState(
+      uiState as NoteListUiState.Success,
+      onNoteClick = onNoteClick
+    )
+    is NoteListUiState.Error -> ErrorState((uiState as NoteListUiState.Error).throwable?.message.orEmpty())
   }
 }
 
@@ -67,21 +81,21 @@ fun LoadingState(modifier: Modifier = Modifier) {
 
 @Composable
 fun ErrorState(
-  errorState: NoteListUiState.Error,
+  errorMessage: String = "Generic error occurred.",
   modifier: Modifier = Modifier
 ) {
   Box(
     modifier = modifier
       .fillMaxSize()
   ) {
-    errorState.throwable
+    Text(text = errorMessage)
   }
 }
 
-
 @Composable
-fun SuccessState(
+fun NoteListSuccessState(
   uiState: NoteListUiState.Success,
+  onNoteClick: (String) -> Unit,
   modifier: Modifier = Modifier
 ) {
   LazyColumn {
@@ -90,13 +104,62 @@ fun SuccessState(
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         modifier = modifier
           .fillMaxWidth()
-          .padding(16.dp)
+          .clickable {
+            onNoteClick.invoke(item.id)
+          }
       ) {
         Text(
           text = item.text,
-          style = MaterialTheme.typography.h4
+          style = MaterialTheme.typography.h4,
+          modifier = modifier
+            .padding(16.dp)
         )
       }
     }
   }
 }
+
+@OptIn(ExperimentalLifecycleComposeApi::class)
+@Composable
+fun NoteDetailScreen(
+  noteId: String,
+  modifier: Modifier = Modifier,
+  viewModel: NoteDetailViewModel = hiltViewModel()
+) {
+  val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+  LaunchedEffect(Unit) {
+    viewModel.dispatchAction(NoteDetailUiAction.LoadNote(noteId))
+  }
+
+  when (uiState) {
+    NoteDetailUiState.Loading -> LoadingState()
+    is NoteDetailUiState.Success -> NoteDetailSuccessState(
+      uiState as NoteDetailUiState.Success,
+    )
+    is NoteDetailUiState.Error -> ErrorState((uiState as NoteDetailUiState.Error).throwable?.message.orEmpty())
+  }
+}
+
+@Composable
+fun NoteDetailSuccessState(
+  uiState: NoteDetailUiState.Success,
+  modifier: Modifier = Modifier
+) {
+  Column(
+    verticalArrangement = Arrangement.spacedBy(16.dp),
+    modifier = modifier
+      .fillMaxSize()
+      .padding(16.dp)
+  ) {
+    Text(
+      text = "ID: ${uiState.note.id}",
+      style = MaterialTheme.typography.h3,
+    )
+    Text(
+      text = "Text: ${uiState.note.text}",
+      style = MaterialTheme.typography.h3,
+    )
+  }
+}
+

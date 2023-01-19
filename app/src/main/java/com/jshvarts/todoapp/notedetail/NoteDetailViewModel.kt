@@ -9,24 +9,35 @@ import com.jshvarts.todoapp.data.NoteRepository
 import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiAction
 import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiEffect
 import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val SAVED_STATE_HANDLE_KEY = "NoteDetailViewModel_uiState_Key"
 
+@HiltViewModel
 class NoteDetailViewModel @Inject constructor(
   private val savedStateHandle: SavedStateHandle,
   private val noteRepository: NoteRepository
-) : MviViewModel<NoteDetailUiAction, NoteDetailUiState, NoteDetailUiEffect>(savedStateHandle) {
-  override val initialState: NoteDetailUiState
-    get() = NoteDetailUiState.Loading
+) : MviViewModel<NoteDetailUiAction, NoteDetailUiState>(savedStateHandle),
+  MviViewModel.EffectProducer<NoteDetailUiEffect> {
+  override val initialState: NoteDetailUiState = NoteDetailUiState.Loading
 
-  override val savedStateHandleKey: String?
-    get() = TODO("Not yet implemented")
+  override val savedStateHandleKey: String = SAVED_STATE_HANDLE_KEY
 
-  override val actionHandler: (NoteDetailUiAction) -> Unit = {
-    when (it) {
-      is NoteDetailUiAction.LoadNote -> onLoadNote(it)
+  override val uiState: StateFlow<NoteDetailUiState> =
+    savedStateHandle.getStateFlow(savedStateHandleKey, initialState)
+  
+  private val _uiEffect = MutableSharedFlow<NoteDetailUiEffect>()
+  override val uiEffect: SharedFlow<NoteDetailUiEffect> = _uiEffect.asSharedFlow()
+
+  override fun handleAction(action: NoteDetailUiAction) {
+    when (action) {
+      is NoteDetailUiAction.LoadNote -> onLoadNote(action)
     }
   }
 
