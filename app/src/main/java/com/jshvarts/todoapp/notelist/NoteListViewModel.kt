@@ -18,37 +18,40 @@ private const val SAVED_STATE_HANDLE_KEY = "NoteListViewModel_uiState_Key"
 
 @HiltViewModel
 class NoteListViewModel @Inject constructor(
-    private val savedStateHandle: SavedStateHandle,
-    private val noteRepository: NoteRepository
+  private val savedStateHandle: SavedStateHandle,
+  private val noteRepository: NoteRepository
 ) : MviViewModel<NoteListUiAction, NoteListUiState, NoteListUiEffect>(savedStateHandle) {
 
-    override val initialState: NoteListUiState
-        get() = NoteListUiState.Loading
+  override val initialState: NoteListUiState
+    get() = NoteListUiState.Loading
 
-    override val savedStateHandleKey: String
-        get() = SAVED_STATE_HANDLE_KEY
+  override val savedStateHandleKey: String
+    get() = SAVED_STATE_HANDLE_KEY
 
-    override fun handleAction(action: NoteListUiAction) {
-        when (action) {
-            NoteListUiAction.LoadList -> onLoadList()
+  override fun handleAction(action: NoteListUiAction) {
+    when (action) {
+      NoteListUiAction.LoadList -> onLoadList()
+    }
+  }
+
+  private val _uiEffect = MutableSharedFlow<NoteListUiEffect>()
+  override val uiEffect: SharedFlow<NoteListUiEffect> = _uiEffect.asSharedFlow()
+
+  override val uiState: StateFlow<NoteListUiState> =
+    savedStateHandle.getStateFlow(savedStateHandleKey, initialState)
+
+  private fun onLoadList() {
+    viewModelScope.launch {
+      noteRepository
+        .getNotes().asUiResult()
+        .onStart { _uiEffect.emit(NoteListUiEffect.MessageDataLoading) } // example of emitting an effect
+        .collect { result ->
+          savedStateHandle[SAVED_STATE_HANDLE_KEY] = when (result) {
+            is UiResult.Loading -> NoteListUiState.Loading
+            is UiResult.Success -> NoteListUiState.Success(result.data)
+            is UiResult.Error -> NoteListUiState.Error(result.exception)
+          }
         }
     }
-
-    override val uiState: StateFlow<NoteListUiState> =
-        savedStateHandle.getStateFlow(savedStateHandleKey, initialState)
-
-    private fun onLoadList() {
-        viewModelScope.launch {
-            noteRepository
-                .getNotes().asUiResult()
-                .onStart { dispatchEffect(NoteListUiEffect.MessageDataLoading) } // example of emitting an effect
-                .collect { result ->
-                    savedStateHandle[SAVED_STATE_HANDLE_KEY] = when (result) {
-                        is UiResult.Loading -> NoteListUiState.Loading
-                        is UiResult.Success -> NoteListUiState.Success(result.data)
-                        is UiResult.Error -> NoteListUiState.Error(result.exception)
-                    }
-                }
-        }
-    }
+  }
 }
