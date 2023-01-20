@@ -30,7 +30,7 @@ fun NotesAppNavHost(
       route = NoteDetail.routeWithArgs,
       arguments = NoteDetail.arguments
     ) { navBackStackEntry ->
-      val noteId = navBackStackEntry.arguments?.getString(NoteDetail.noteIdArg)!!
+      val noteId = navBackStackEntry.arguments?.getInt(NoteDetail.noteIdArg)!!
       NoteDetailScreen(noteId)
     }
   }
@@ -51,6 +51,6 @@ fun NavHostController.navigateSingleTopTo(route: String) =
     restoreState = true
   }
 
-private fun NavHostController.navigateToNote(noteId: String) {
+private fun NavHostController.navigateToNote(noteId: Int) {
   this.navigateSingleTopTo("${NoteDetail.route}/$noteId")
 }
