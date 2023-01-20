@@ -8,35 +8,22 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.RawValue
 
 @Parcelize
-sealed class NoteListPendingTodosUiState : UiState, Parcelable {
-  object Loading : NoteListPendingTodosUiState()
+sealed class NoteListTodosUiState : UiState, Parcelable {
+  object Loading : NoteListTodosUiState()
 
   data class Success(
     val data: @RawValue List<Note>
-  ) : NoteListPendingTodosUiState()
+  ) : NoteListTodosUiState()
 
   data class Error(
     val throwable: Throwable? = null
-  ) : NoteListPendingTodosUiState()
-}
-
-@Parcelize
-sealed class NoteListCompletedTodosUiState : UiState, Parcelable {
-  object Loading : NoteListCompletedTodosUiState()
-
-  data class Success(
-    val data: @RawValue List<Note>
-  ) : NoteListCompletedTodosUiState()
-
-  data class Error(
-    val throwable: Throwable? = null
-  ) : NoteListCompletedTodosUiState()
+  ) : NoteListTodosUiState()
 }
 
 @Parcelize
 data class NoteListUiState(
-  val pendingTodosUiState: NoteListPendingTodosUiState,
-  val completedTodosUiState: NoteListCompletedTodosUiState
+  val pendingTodosUiState: NoteListTodosUiState,
+  val completedTodosUiState: NoteListTodosUiState
 ) : UiState, Parcelable
 
 sealed interface NoteListUiEffect : UiEffect {

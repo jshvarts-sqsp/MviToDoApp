@@ -29,8 +29,7 @@ import com.jshvarts.todoapp.notedetail.NoteDetailViewModel
 import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiAction
 import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiState
 import com.jshvarts.todoapp.notelist.NoteListViewModel
-import com.jshvarts.todoapp.notelist.ui.NoteListCompletedTodosUiState
-import com.jshvarts.todoapp.notelist.ui.NoteListPendingTodosUiState
+import com.jshvarts.todoapp.notelist.ui.NoteListTodosUiState
 import com.jshvarts.todoapp.notelist.ui.NoteListUiState
 import com.jshvarts.todoapp.ui.navigation.NotesAppNavHost
 import com.jshvarts.todoapp.ui.theme.ToDoAppTheme
@@ -154,9 +153,9 @@ fun NoteListSuccessState(
     ) { tabIndex ->
       if (tabIndex == 0) {
         when (uiState.pendingTodosUiState) {
-          is NoteListPendingTodosUiState.Error -> ErrorState(uiState.pendingTodosUiState.throwable?.message.orEmpty())
-          NoteListPendingTodosUiState.Loading -> LoadingState()
-          is NoteListPendingTodosUiState.Success -> {
+          is NoteListTodosUiState.Error -> ErrorState(uiState.pendingTodosUiState.throwable?.message.orEmpty())
+          NoteListTodosUiState.Loading -> LoadingState()
+          is NoteListTodosUiState.Success -> {
             TodosSuccessState(
               data = uiState.pendingTodosUiState.data,
               emptyTodosResId = emptyTodosResId,
@@ -166,9 +165,9 @@ fun NoteListSuccessState(
         }
       } else {
         when (uiState.completedTodosUiState) {
-          is NoteListCompletedTodosUiState.Error -> ErrorState(uiState.completedTodosUiState.throwable?.message.orEmpty())
-          NoteListCompletedTodosUiState.Loading -> LoadingState()
-          is NoteListCompletedTodosUiState.Success -> {
+          is NoteListTodosUiState.Error -> ErrorState(uiState.completedTodosUiState.throwable?.message.orEmpty())
+          NoteListTodosUiState.Loading -> LoadingState()
+          is NoteListTodosUiState.Success -> {
             TodosSuccessState(
               data = uiState.completedTodosUiState.data,
               emptyTodosResId = emptyTodosResId,

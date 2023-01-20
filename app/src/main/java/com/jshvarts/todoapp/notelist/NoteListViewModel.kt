@@ -7,10 +7,7 @@ import com.jshvarts.todoapp.arch.UiResult
 import com.jshvarts.todoapp.arch.asUiResult
 import com.jshvarts.todoapp.data.Note
 import com.jshvarts.todoapp.data.NoteRepository
-import com.jshvarts.todoapp.notelist.ui.NoteListCompletedTodosUiState
-import com.jshvarts.todoapp.notelist.ui.NoteListPendingTodosUiState
-import com.jshvarts.todoapp.notelist.ui.NoteListUiEffect
-import com.jshvarts.todoapp.notelist.ui.NoteListUiState
+import com.jshvarts.todoapp.notelist.ui.*
 import com.jshvarts.todoapp.ui.WhileUiSubscribed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -23,8 +20,8 @@ class NoteListViewModel @Inject constructor(
   MviViewModel.EffectProducer<NoteListUiEffect> {
 
   override val initialState: NoteListUiState = NoteListUiState(
-    pendingTodosUiState = NoteListPendingTodosUiState.Loading,
-    completedTodosUiState = NoteListCompletedTodosUiState.Loading
+    pendingTodosUiState = NoteListTodosUiState.Loading,
+    completedTodosUiState = NoteListTodosUiState.Loading
   )
 
   override val savedStateHandleKey = null
@@ -42,15 +39,15 @@ class NoteListViewModel @Inject constructor(
 
   override val uiState: StateFlow<NoteListUiState> = combine(pendingTodos, completedTodos) { pendingTodosResult, completedTodosResult ->
     val pendingTodosUiState = when (pendingTodosResult) {
-      is UiResult.Loading -> NoteListPendingTodosUiState.Loading
-      is UiResult.Success -> NoteListPendingTodosUiState.Success(pendingTodosResult.data)
-      is UiResult.Error -> NoteListPendingTodosUiState.Error(pendingTodosResult.exception)
+      is UiResult.Loading -> NoteListTodosUiState.Loading
+      is UiResult.Success -> NoteListTodosUiState.Success(pendingTodosResult.data)
+      is UiResult.Error -> NoteListTodosUiState.Error(pendingTodosResult.exception)
     }
 
     val completedTodosUiState = when (completedTodosResult) {
-      is UiResult.Loading -> NoteListCompletedTodosUiState.Loading
-      is UiResult.Success -> NoteListCompletedTodosUiState.Success(completedTodosResult.data)
-      is UiResult.Error -> NoteListCompletedTodosUiState.Error(completedTodosResult.exception)
+      is UiResult.Loading -> NoteListTodosUiState.Loading
+      is UiResult.Success -> NoteListTodosUiState.Success(completedTodosResult.data)
+      is UiResult.Error -> NoteListTodosUiState.Error(completedTodosResult.exception)
     }
 
     NoteListUiState(
