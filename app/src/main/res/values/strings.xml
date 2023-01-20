@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">ToDoApp</string>
+    <string name="notes">My todos</string>
+    <string name="pending_todos">Pending</string>
+    <string name="completed_todos">Completed</string>
+    <string name="empty_pending_todos">You have no pending todos</string>
+    <string name="empty_completed_todos">You have no completed todos</string>
 </resources>

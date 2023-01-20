@@ -13,11 +13,11 @@ import kotlinx.coroutines.flow.onEmpty
 import javax.inject.Inject
 
 class OfflineFirstNoteRepository @Inject constructor(
-  val notesApi: NotesApi,
-  val notesDao: NotesDao
+  private val notesApi: NotesApi,
+  private val notesDao: NotesDao
 ) : NoteRepository {
-  override fun getNotes(): Flow<List<Note>> {
-    return notesDao.getNotes().map { entities ->
+  override fun getNotes(isCompleted: Boolean): Flow<List<Note>> {
+    return notesDao.getNotes(isCompleted).map { entities ->
       entities.map(NoteEntity::asNote)
     }.onEach {
       if (it.isEmpty()) {
@@ -34,8 +34,8 @@ class OfflineFirstNoteRepository @Inject constructor(
     }
   }
 
-  override suspend fun refreshNotes() {
-    notesApi.getNotes()
+  override suspend fun refreshNotes(isCompleted: Boolean) {
+    notesApi.getNotes(isCompleted)
       .also { remoteNotes ->
         notesDao.insertNotes(remoteNotes.map(RemoteNote::asEntity))
       }
