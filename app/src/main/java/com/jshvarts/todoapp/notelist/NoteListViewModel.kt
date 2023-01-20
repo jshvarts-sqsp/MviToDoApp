@@ -7,7 +7,11 @@ import com.jshvarts.todoapp.arch.UiResult
 import com.jshvarts.todoapp.arch.asUiResult
 import com.jshvarts.todoapp.data.Note
 import com.jshvarts.todoapp.data.NoteRepository
-import com.jshvarts.todoapp.notelist.ui.*
+import com.jshvarts.todoapp.notelist.ui.NoteListCompletedTodosUiState
+import com.jshvarts.todoapp.notelist.ui.NoteListPendingTodosUiState
+import com.jshvarts.todoapp.notelist.ui.NoteListUiEffect
+import com.jshvarts.todoapp.notelist.ui.NoteListUiState
+import com.jshvarts.todoapp.ui.WhileUiSubscribed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import javax.inject.Inject
@@ -55,7 +59,7 @@ class NoteListViewModel @Inject constructor(
     )
   }.stateIn(
     scope = viewModelScope,
-    started = SharingStarted.WhileSubscribed(5000),
+    started = WhileUiSubscribed,
     initialValue = initialState
   )
 }
