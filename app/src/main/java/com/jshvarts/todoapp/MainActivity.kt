@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 fun NoteListScreen(
-  onNoteClick: (String) -> Unit,
+  onNoteClick: (Int) -> Unit,
   modifier: Modifier = Modifier,
   viewModel: NoteListViewModel = hiltViewModel()
 ) {
@@ -95,7 +95,7 @@ fun ErrorState(
 @Composable
 fun NoteListSuccessState(
   uiState: NoteListUiState.Success,
-  onNoteClick: (String) -> Unit,
+  onNoteClick: (Int) -> Unit,
   modifier: Modifier = Modifier
 ) {
   LazyColumn {
@@ -109,8 +109,8 @@ fun NoteListSuccessState(
           }
       ) {
         Text(
-          text = item.text,
-          style = MaterialTheme.typography.h4,
+          text = item.title,
+          style = MaterialTheme.typography.h6,
           modifier = modifier
             .padding(16.dp)
         )
@@ -122,7 +122,7 @@ fun NoteListSuccessState(
 @OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 fun NoteDetailScreen(
-  noteId: String,
+  noteId: Int,
   modifier: Modifier = Modifier,
   viewModel: NoteDetailViewModel = hiltViewModel()
 ) {
@@ -157,7 +157,7 @@ fun NoteDetailSuccessState(
       style = MaterialTheme.typography.h3,
     )
     Text(
-      text = "Text: ${uiState.note.text}",
+      text = "Text: ${uiState.note.title}",
       style = MaterialTheme.typography.h3,
     )
   }

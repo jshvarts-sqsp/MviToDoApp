@@ -17,7 +17,7 @@ object NoteDetail : NotesDestination {
   val routeWithArgs = "$route/{$noteIdArg}"
   val arguments = listOf(
     navArgument(noteIdArg) {
-      type = NavType.StringType
+      type = NavType.IntType
       nullable = false
     }
   )

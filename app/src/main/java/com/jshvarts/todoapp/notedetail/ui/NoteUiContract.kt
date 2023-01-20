@@ -8,7 +8,7 @@ import com.jshvarts.todoapp.data.Note
 import kotlinx.parcelize.Parcelize
 
 sealed interface NoteDetailUiAction : UiAction {
-  data class LoadNote(val id: String) : NoteDetailUiAction
+  data class LoadNote(val id: Int) : NoteDetailUiAction
 }
 
 @Parcelize
