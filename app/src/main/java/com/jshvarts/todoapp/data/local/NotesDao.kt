@@ -8,7 +8,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface NotesDao {
-  @Query(value = "SELECT * FROM note WHERE completed = :completed")
+  @Query(value = "SELECT * FROM note WHERE completed = :completed ORDER BY autoId DESC")
   fun getNotes(completed: Boolean): Flow<List<NoteEntity>>
 
   @Query(value = "SELECT * FROM note WHERE id = :id")

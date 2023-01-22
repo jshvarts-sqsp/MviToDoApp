@@ -1,11 +1,16 @@
 package com.jshvarts.todoapp.notelist.ui
 
 import android.os.Parcelable
+import com.jshvarts.todoapp.arch.UiAction
 import com.jshvarts.todoapp.arch.UiEffect
 import com.jshvarts.todoapp.arch.UiState
 import com.jshvarts.todoapp.data.Note
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.RawValue
+
+sealed interface NoteListUiAction : UiAction {
+  object PullToRefresh : NoteListUiAction
+}
 
 @Parcelize
 sealed class NoteListTodosUiState : UiState, Parcelable {
@@ -27,5 +32,5 @@ data class NoteListUiState(
 ) : UiState, Parcelable
 
 sealed interface NoteListUiEffect : UiEffect {
-  object MessageDataLoading : NoteListUiEffect
+  object RefreshFailed : NoteListUiEffect
 }

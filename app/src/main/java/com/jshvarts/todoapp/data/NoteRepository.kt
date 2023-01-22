@@ -5,5 +5,5 @@ import kotlinx.coroutines.flow.Flow
 interface NoteRepository {
   fun getNotes(isCompleted: Boolean = false): Flow<List<Note>>
   fun getNote(id: Int): Flow<Note>
-  suspend fun refreshNotes(isCompleted: Boolean = false)
+  suspend fun refreshNotes(): Result<Unit>
 }

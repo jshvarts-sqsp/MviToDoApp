@@ -34,10 +34,15 @@ class OfflineFirstNoteRepository @Inject constructor(
     }
   }
 
-  override suspend fun refreshNotes(isCompleted: Boolean) {
-    notesApi.getNotes(isCompleted)
-      .also { remoteNotes ->
-        notesDao.insertNotes(remoteNotes.map(RemoteNote::asEntity))
-      }
+  override suspend fun refreshNotes(): Result<Unit> {
+    return kotlin.runCatching {
+      notesApi.getNotes()
+        .also { remoteNotes ->
+          notesDao.insertNotes(
+            remoteNotes.map(RemoteNote::asEntity)
+              .shuffled()
+          )
+        }
+    }
   }
 }

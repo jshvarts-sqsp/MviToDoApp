@@ -6,7 +6,8 @@ import com.jshvarts.todoapp.data.Note
 
 @Entity(tableName = "note")
 data class NoteEntity(
-  @PrimaryKey val id: Int,
+  @PrimaryKey(autoGenerate = true) val autoId: Int = 0,
+  val id: Int,
   val title: String,
   val completed: Boolean
 )
