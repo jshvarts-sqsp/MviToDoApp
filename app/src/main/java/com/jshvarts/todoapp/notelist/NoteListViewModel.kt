@@ -2,21 +2,24 @@ package com.jshvarts.todoapp.notelist
 
 import androidx.lifecycle.viewModelScope
 import com.jshvarts.todoapp.arch.MviViewModel
-import com.jshvarts.todoapp.arch.UiAction
 import com.jshvarts.todoapp.arch.UiResult
 import com.jshvarts.todoapp.arch.asUiResult
 import com.jshvarts.todoapp.data.Note
 import com.jshvarts.todoapp.data.NoteRepository
-import com.jshvarts.todoapp.notelist.ui.*
+import com.jshvarts.todoapp.notelist.ui.NoteListTodosUiState
+import com.jshvarts.todoapp.notelist.ui.NoteListUiAction
+import com.jshvarts.todoapp.notelist.ui.NoteListUiEffect
+import com.jshvarts.todoapp.notelist.ui.NoteListUiState
 import com.jshvarts.todoapp.ui.WhileUiSubscribed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class NoteListViewModel @Inject constructor(
-  noteRepository: NoteRepository
-) : MviViewModel<UiAction, NoteListUiState>(),
+  private val noteRepository: NoteRepository
+) : MviViewModel<NoteListUiAction, NoteListUiState>(),
   MviViewModel.EffectProducer<NoteListUiEffect> {
 
   override val initialState: NoteListUiState = NoteListUiState(
@@ -26,7 +29,11 @@ class NoteListViewModel @Inject constructor(
 
   override val savedStateHandleKey = null
 
-  override fun handleAction(action: UiAction) = Unit
+  override fun handleAction(action: NoteListUiAction) {
+    when (action) {
+      NoteListUiAction.PullToRefresh -> onPullToRefresh()
+    }
+  }
 
   private val _uiEffect = MutableSharedFlow<NoteListUiEffect>()
   override val uiEffect: SharedFlow<NoteListUiEffect> = _uiEffect.asSharedFlow()
@@ -59,4 +66,13 @@ class NoteListViewModel @Inject constructor(
     started = WhileUiSubscribed,
     initialValue = initialState
   )
+
+  private fun onPullToRefresh() {
+    viewModelScope.launch {
+      noteRepository.refreshNotes()
+        .onFailure {
+          _uiEffect.emit(NoteListUiEffect.RefreshFailed)
+        }
+    }
+  }
 }

@@ -20,7 +20,8 @@ object DbModule {
     context,
     NotesDatabase::class.java,
     "notes-database"
-  ).build()
+  ).fallbackToDestructiveMigration()
+    .build()
 
   @Provides
   fun providesAuthorDao(

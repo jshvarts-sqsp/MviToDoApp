@@ -5,4 +5,5 @@
     <string name="completed_todos">Completed</string>
     <string name="empty_pending_todos">You have no pending todos</string>
     <string name="empty_completed_todos">You have no completed todos</string>
+    <string name="refresh_failed_message">Refresh failed. Please try again later.</string>
 </resources>

@@ -10,6 +10,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -24,16 +27,20 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
+import com.jshvarts.todoapp.arch.UiEffect
 import com.jshvarts.todoapp.data.Note
 import com.jshvarts.todoapp.notedetail.NoteDetailViewModel
 import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiAction
 import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiState
 import com.jshvarts.todoapp.notelist.NoteListViewModel
 import com.jshvarts.todoapp.notelist.ui.NoteListTodosUiState
+import com.jshvarts.todoapp.notelist.ui.NoteListUiAction
+import com.jshvarts.todoapp.notelist.ui.NoteListUiEffect
 import com.jshvarts.todoapp.notelist.ui.NoteListUiState
 import com.jshvarts.todoapp.ui.navigation.NotesAppNavHost
 import com.jshvarts.todoapp.ui.theme.ToDoAppTheme
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
@@ -60,7 +67,22 @@ fun NoteListScreen(
   viewModel: NoteListViewModel = hiltViewModel()
 ) {
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+  val uiEffect by viewModel.uiEffect.collectAsStateWithLifecycle(UiEffect.Idle)
   val scaffoldState = rememberScaffoldState()
+  val refreshFailedMessage = stringResource(id = R.string.refresh_failed_message)
+  val scope = rememberCoroutineScope()
+
+  when (uiEffect) {
+    NoteListUiEffect.RefreshFailed -> {
+      LaunchedEffect(scaffoldState.snackbarHostState) {
+        scope.launch {
+          viewModel.uiEffect.collect {
+            scaffoldState.snackbarHostState.showSnackbar(message = refreshFailedMessage)
+          }
+        }
+      }
+    }
+  }
 
   Scaffold(
     scaffoldState = scaffoldState,
@@ -72,7 +94,9 @@ fun NoteListScreen(
         backgroundColor = Color.White,
         contentColor = Color.Black
       )
-    }) {
+    },
+    modifier = modifier
+  ) {
     NoteListSuccessState(
       uiState = uiState,
       onNoteClick = onNoteClick
@@ -104,7 +128,7 @@ fun ErrorState(
   }
 }
 
-@OptIn(ExperimentalPagerApi::class)
+@OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun NoteListSuccessState(
   uiState: NoteListUiState,
@@ -119,6 +143,18 @@ fun NoteListSuccessState(
   )
   val pagerState = rememberPagerState()
   val scope = rememberCoroutineScope()
+
+  val refreshScope = rememberCoroutineScope()
+  var refreshing by remember { mutableStateOf(false) }
+
+  fun refresh() = refreshScope.launch {
+    refreshing = true
+    delay(300)
+    viewModel.dispatchAction(NoteListUiAction.PullToRefresh)
+    refreshing = false
+  }
+
+  val pullRefreshState = rememberPullRefreshState(refreshing, ::refresh)
 
   Column {
     TabRow(
@@ -149,32 +185,35 @@ fun NoteListSuccessState(
 
     HorizontalPager(
       count = tabTitles.size,
-      state = pagerState,
+      state = pagerState
     ) { tabIndex ->
-      if (tabIndex == 0) {
-        when (uiState.pendingTodosUiState) {
-          is NoteListTodosUiState.Error -> ErrorState(uiState.pendingTodosUiState.throwable?.message.orEmpty())
-          NoteListTodosUiState.Loading -> LoadingState()
-          is NoteListTodosUiState.Success -> {
-            TodosSuccessState(
-              data = uiState.pendingTodosUiState.data,
-              emptyTodosResId = emptyTodosResId,
-              onNoteClick = onNoteClick
-            )
+      Box(Modifier.pullRefresh(pullRefreshState)) {
+        if (tabIndex == 0) {
+          when (uiState.pendingTodosUiState) {
+            is NoteListTodosUiState.Error -> ErrorState(uiState.pendingTodosUiState.throwable?.message.orEmpty())
+            NoteListTodosUiState.Loading -> LoadingState()
+            is NoteListTodosUiState.Success -> {
+              TodosSuccessState(
+                data = uiState.pendingTodosUiState.data,
+                emptyTodosResId = emptyTodosResId,
+                onNoteClick = onNoteClick
+              )
+            }
+          }
+        } else {
+          when (uiState.completedTodosUiState) {
+            is NoteListTodosUiState.Error -> ErrorState(uiState.completedTodosUiState.throwable?.message.orEmpty())
+            NoteListTodosUiState.Loading -> LoadingState()
+            is NoteListTodosUiState.Success -> {
+              TodosSuccessState(
+                data = uiState.completedTodosUiState.data,
+                emptyTodosResId = emptyTodosResId,
+                onNoteClick = onNoteClick
+              )
+            }
           }
         }
-      } else {
-        when (uiState.completedTodosUiState) {
-          is NoteListTodosUiState.Error -> ErrorState(uiState.completedTodosUiState.throwable?.message.orEmpty())
-          NoteListTodosUiState.Loading -> LoadingState()
-          is NoteListTodosUiState.Success -> {
-            TodosSuccessState(
-              data = uiState.completedTodosUiState.data,
-              emptyTodosResId = emptyTodosResId,
-              onNoteClick = onNoteClick
-            )
-          }
-        }
+        PullRefreshIndicator(refreshing, pullRefreshState, Modifier.align(Alignment.TopCenter))
       }
     }
   }
