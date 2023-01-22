@@ -10,6 +10,9 @@ import kotlinx.parcelize.RawValue
 
 sealed interface NoteListUiAction : UiAction {
   object PullToRefresh : NoteListUiAction
+  data class SwipeToDelete(
+    val id: Int
+  ) : NoteListUiAction
 }
 
 @Parcelize
@@ -32,5 +35,7 @@ data class NoteListUiState(
 ) : UiState, Parcelable
 
 sealed interface NoteListUiEffect : UiEffect {
+  object Initial
   object RefreshFailed : NoteListUiEffect
+  object DeleteFailed : NoteListUiEffect
 }

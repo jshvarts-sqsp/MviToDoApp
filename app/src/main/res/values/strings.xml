@@ -6,4 +6,6 @@
     <string name="empty_pending_todos">You have no pending todos</string>
     <string name="empty_completed_todos">You have no completed todos</string>
     <string name="refresh_failed_message">Refresh failed. Please try again later.</string>
+    <string name="delete_icon">Delete todo</string>
+    <string name="delete_failed_message">Delete failed. Please try again.</string>
 </resources>

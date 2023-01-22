@@ -9,9 +9,7 @@ interface UiAction
 
 interface UiState
 
-interface UiEffect {
-  object Idle
-}
+interface UiEffect
 
 interface UiMapper<T, R> {
   fun toUi(item: T): R

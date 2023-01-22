@@ -5,17 +5,23 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.StringRes
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -27,7 +33,6 @@ import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
 import com.google.accompanist.pager.rememberPagerState
-import com.jshvarts.todoapp.arch.UiEffect
 import com.jshvarts.todoapp.data.Note
 import com.jshvarts.todoapp.notedetail.NoteDetailViewModel
 import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiAction
@@ -67,17 +72,23 @@ fun NoteListScreen(
   viewModel: NoteListViewModel = hiltViewModel()
 ) {
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-  val uiEffect by viewModel.uiEffect.collectAsStateWithLifecycle(UiEffect.Idle)
+  val uiEffect by viewModel.uiEffect.collectAsStateWithLifecycle(NoteListUiEffect.Initial)
   val scaffoldState = rememberScaffoldState()
   val refreshFailedMessage = stringResource(id = R.string.refresh_failed_message)
+  val deleteFailedMessage = stringResource(id = R.string.delete_failed_message)
   val scope = rememberCoroutineScope()
 
-  when (uiEffect) {
-    NoteListUiEffect.RefreshFailed -> {
-      LaunchedEffect(scaffoldState.snackbarHostState) {
-        scope.launch {
+  LaunchedEffect(scaffoldState.snackbarHostState) {
+    scope.launch {
+      when (uiEffect) {
+        NoteListUiEffect.RefreshFailed -> {
           viewModel.uiEffect.collect {
             scaffoldState.snackbarHostState.showSnackbar(message = refreshFailedMessage)
+          }
+        }
+        NoteListUiEffect.DeleteFailed -> {
+          viewModel.uiEffect.collect {
+            scaffoldState.snackbarHostState.showSnackbar(message = deleteFailedMessage)
           }
         }
       }
@@ -99,7 +110,12 @@ fun NoteListScreen(
   ) {
     NoteListSuccessState(
       uiState = uiState,
-      onNoteClick = onNoteClick
+      onNoteClick = onNoteClick,
+      onSwipeToDelete = { note ->
+        viewModel.dispatchAction(
+          NoteListUiAction.SwipeToDelete(note.id)
+        )
+      }
     )
   }
 }
@@ -133,6 +149,7 @@ fun ErrorState(
 fun NoteListSuccessState(
   uiState: NoteListUiState,
   onNoteClick: (Int) -> Unit,
+  onSwipeToDelete: (Note) -> Unit,
   viewModel: NoteListViewModel = hiltViewModel(),
   modifier: Modifier = Modifier
 ) {
@@ -156,7 +173,7 @@ fun NoteListSuccessState(
 
   val pullRefreshState = rememberPullRefreshState(refreshing, ::refresh)
 
-  Column {
+  Column(modifier = modifier) {
     TabRow(
       backgroundColor = Color.White,
       contentColor = Color.Black,
@@ -165,7 +182,7 @@ fun NoteListSuccessState(
         TabRowDefaults.Indicator(
           Modifier.pagerTabIndicatorOffset(
             pagerState,
-            tabPositions
+            tabPositions,
           )
         )
       }) {
@@ -177,6 +194,7 @@ fun NoteListSuccessState(
               pagerState.animateScrollToPage(index)
             }
           },
+
           text = { Text(stringResource(id = titleResId)) })
       }
     }
@@ -185,7 +203,8 @@ fun NoteListSuccessState(
 
     HorizontalPager(
       count = tabTitles.size,
-      state = pagerState
+      state = pagerState,
+      userScrollEnabled = false
     ) { tabIndex ->
       Box(Modifier.pullRefresh(pullRefreshState)) {
         if (tabIndex == 0) {
@@ -196,7 +215,8 @@ fun NoteListSuccessState(
               TodosSuccessState(
                 data = uiState.pendingTodosUiState.data,
                 emptyTodosResId = emptyTodosResId,
-                onNoteClick = onNoteClick
+                onNoteClick = onNoteClick,
+                onSwipeToDelete = onSwipeToDelete
               )
             }
           }
@@ -208,7 +228,8 @@ fun NoteListSuccessState(
               TodosSuccessState(
                 data = uiState.completedTodosUiState.data,
                 emptyTodosResId = emptyTodosResId,
-                onNoteClick = onNoteClick
+                onNoteClick = onNoteClick,
+                onSwipeToDelete = onSwipeToDelete
               )
             }
           }
@@ -219,35 +240,90 @@ fun NoteListSuccessState(
   }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun TodosSuccessState(
   data: List<Note>,
   @StringRes emptyTodosResId: Int,
   onNoteClick: (Int) -> Unit,
+  onSwipeToDelete: (Note) -> Unit,
   modifier: Modifier = Modifier,
 ) {
   if (data.isEmpty()) {
     TodosEmptyState(resId = emptyTodosResId)
   } else {
     LazyColumn {
-      items(data) { item ->
-        Row(
-          horizontalArrangement = Arrangement.spacedBy(16.dp),
-          modifier = modifier
-            .fillMaxWidth()
-            .clickable {
-              onNoteClick.invoke(item.id)
-            }
-        ) {
-          Text(
-            text = item.title,
-            style = MaterialTheme.typography.h6,
-            modifier = modifier
-              .padding(16.dp)
-          )
+      items(
+        items = data,
+        key = { it.id }
+      ) { item ->
+        val dismissState = rememberDismissState()
+        val isDismissed = dismissState.isDismissed(DismissDirection.EndToStart)
+        if (isDismissed) {
+          onSwipeToDelete(item)
         }
+
+        val degrees by animateFloatAsState(
+          if (dismissState.targetValue == DismissValue.Default) 0f else -45f
+        )
+
+        SwipeToDismiss(
+          state = dismissState,
+          directions = setOf(DismissDirection.EndToStart),
+          dismissThresholds = { FractionalThreshold(0.2f) },
+          background = { SwipeToDismissBackground(degrees = degrees) },
+          dismissContent = {
+            NoteListItem(
+              item = item,
+              onNoteClick = onNoteClick
+            )
+          },
+          modifier = modifier
+        )
       }
     }
+  }
+}
+
+@Composable
+fun SwipeToDismissBackground(degrees: Float) {
+  Box(
+    modifier = Modifier
+      .fillMaxSize()
+      .background(Color.White)
+      .padding(horizontal = 16.dp),
+    contentAlignment = Alignment.CenterEnd
+  ) {
+    Icon(
+      modifier = Modifier
+        .rotate(degrees),
+      imageVector = Icons.Filled.Delete,
+      contentDescription = stringResource(id = R.string.delete_icon),
+      tint = Color.White
+    )
+  }
+}
+
+@Composable
+fun NoteListItem(
+  item: Note,
+  onNoteClick: (Int) -> Unit,
+  modifier: Modifier = Modifier
+) {
+  Row(
+    horizontalArrangement = Arrangement.spacedBy(16.dp),
+    modifier = modifier
+      .fillMaxWidth()
+      .clickable {
+        onNoteClick.invoke(item.id)
+      }
+  ) {
+    Text(
+      text = item.title,
+      style = MaterialTheme.typography.h6,
+      modifier = modifier
+        .padding(16.dp)
+    )
   }
 }
 

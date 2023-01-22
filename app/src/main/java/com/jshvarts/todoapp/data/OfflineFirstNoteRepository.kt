@@ -45,4 +45,12 @@ class OfflineFirstNoteRepository @Inject constructor(
         }
     }
   }
+
+  override suspend fun deleteNote(id: Int): Result<Unit> {
+    return kotlin.runCatching {
+      notesDao.getNote(id).collect {
+        notesDao.deleteNote(it)
+      }
+    }
+  }
 }
