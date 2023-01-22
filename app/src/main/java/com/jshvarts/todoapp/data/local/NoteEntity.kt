@@ -6,10 +6,10 @@ import com.jshvarts.todoapp.data.Note
 
 @Entity(tableName = "note")
 data class NoteEntity(
-  @PrimaryKey(autoGenerate = true) val autoId: Int = 0,
-  val id: Int,
+  @PrimaryKey val id: Int,
   val title: String,
-  val completed: Boolean
+  val completed: Boolean,
+  val updateTimestamp: Long? = null
 )
 
 fun NoteEntity.asNote() = Note(

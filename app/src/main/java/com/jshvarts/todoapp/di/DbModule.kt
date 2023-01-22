@@ -24,7 +24,7 @@ object DbModule {
     .build()
 
   @Provides
-  fun providesAuthorDao(
+  fun providesNotesDao(
     database: NotesDatabase,
   ): NotesDao = database.notesDao()
 }

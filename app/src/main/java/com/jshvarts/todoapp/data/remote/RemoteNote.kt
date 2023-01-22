@@ -13,5 +13,6 @@ data class RemoteNote(
 fun RemoteNote.asEntity() = NoteEntity(
   id = id,
   title = title,
-  completed = completed
+  completed = completed,
+  updateTimestamp = System.currentTimeMillis()
 )

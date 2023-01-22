@@ -32,6 +32,7 @@ class NoteListViewModel @Inject constructor(
   override fun handleAction(action: NoteListUiAction) {
     when (action) {
       NoteListUiAction.PullToRefresh -> onPullToRefresh()
+      is NoteListUiAction.SwipeToDelete -> onDeleteNote(action)
     }
   }
 
@@ -39,10 +40,12 @@ class NoteListViewModel @Inject constructor(
   override val uiEffect: SharedFlow<NoteListUiEffect> = _uiEffect.asSharedFlow()
 
   private val pendingTodos: Flow<UiResult<List<Note>>> =
-    noteRepository.getNotes(isCompleted = false).asUiResult()
+    noteRepository.getNotes(isCompleted = false)
+      .asUiResult()
 
   private val completedTodos: Flow<UiResult<List<Note>>> =
-    noteRepository.getNotes(isCompleted = true).asUiResult()
+    noteRepository.getNotes(isCompleted = true)
+      .asUiResult()
 
   override val uiState: StateFlow<NoteListUiState> = combine(pendingTodos, completedTodos) { pendingTodosResult, completedTodosResult ->
     val pendingTodosUiState = when (pendingTodosResult) {
@@ -72,6 +75,15 @@ class NoteListViewModel @Inject constructor(
       noteRepository.refreshNotes()
         .onFailure {
           _uiEffect.emit(NoteListUiEffect.RefreshFailed)
+        }
+    }
+  }
+
+  private fun onDeleteNote(action: NoteListUiAction.SwipeToDelete) {
+    viewModelScope.launch {
+      noteRepository.deleteNote(action.id)
+        .onFailure {
+          _uiEffect.emit(NoteListUiEffect.DeleteFailed)
         }
     }
   }
