@@ -6,8 +6,8 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.jshvarts.todoapp.NoteDetailScreen
-import com.jshvarts.todoapp.NoteListScreen
+import com.jshvarts.todoapp.notedetail.ui.NoteDetailScreen
+import com.jshvarts.todoapp.notelist.ui.NoteListScreen
 
 @Composable
 fun NotesAppNavHost(
@@ -23,6 +23,9 @@ fun NotesAppNavHost(
       NoteListScreen(
         onNoteClick = { noteId ->
           navController.navigateToNote(noteId)
+        },
+        onAddNoteClick = {
+          println("handle onAddNoteClick")
         }
       )
     }
