@@ -1,6 +1,7 @@
 package com.jshvarts.todoapp.data
 
 import com.jshvarts.todoapp.data.local.NoteEntity
+import com.jshvarts.todoapp.data.local.NoteIdFactory
 import com.jshvarts.todoapp.data.local.NotesDao
 import com.jshvarts.todoapp.data.local.asNote
 import com.jshvarts.todoapp.data.remote.NotesApi
@@ -14,7 +15,8 @@ import javax.inject.Inject
 
 class OfflineFirstNoteRepository @Inject constructor(
   private val notesApi: NotesApi,
-  private val notesDao: NotesDao
+  private val notesDao: NotesDao,
+  private val noteIdFactory: NoteIdFactory
 ) : NoteRepository {
   override fun getNotes(isCompleted: Boolean): Flow<List<Note>> {
     return notesDao.getNotes(isCompleted).map { entities ->
@@ -51,6 +53,18 @@ class OfflineFirstNoteRepository @Inject constructor(
       notesDao.getNote(id).collect {
         notesDao.deleteNote(it)
       }
+    }
+  }
+
+  override suspend fun addNote(note: Note): Result<Unit> {
+    return kotlin.runCatching {
+      val nextId = noteIdFactory.getNextAvailableId()
+      val noteEntity = NoteEntity(
+        id = nextId,
+        title = note.title,
+        completed = note.completed
+      )
+      notesDao.insertNote(noteEntity)
     }
   }
 }

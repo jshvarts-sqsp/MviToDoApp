@@ -38,6 +38,9 @@ class NoteDetailViewModel @Inject constructor(
   override fun handleAction(action: NoteDetailUiAction) {
     when (action) {
       is NoteDetailUiAction.LoadNote -> onLoadNote(action)
+      NoteDetailUiAction.NewNote -> {
+        println("show add note screen")
+      }
     }
   }
 

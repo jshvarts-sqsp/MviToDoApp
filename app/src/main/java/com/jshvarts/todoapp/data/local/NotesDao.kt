@@ -18,5 +18,11 @@ interface NotesDao {
   suspend fun deleteNote(entity: NoteEntity)
 
   @Insert(onConflict = OnConflictStrategy.REPLACE)
-  suspend fun insertNotes(movies: List<NoteEntity>): List<Long>
+  suspend fun insertNotes(notes: List<NoteEntity>)
+
+  @Insert(onConflict = OnConflictStrategy.REPLACE)
+  suspend fun insertNote(notes: NoteEntity)
+
+  @Query(value = "SELECT max(id) FROM note")
+  suspend fun getCurrentMaxNoteId(): Int
 }

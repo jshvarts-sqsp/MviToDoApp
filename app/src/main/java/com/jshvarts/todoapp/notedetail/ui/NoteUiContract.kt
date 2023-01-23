@@ -9,6 +9,7 @@ import kotlinx.parcelize.Parcelize
 
 sealed interface NoteDetailUiAction : UiAction {
   data class LoadNote(val id: Int) : NoteDetailUiAction
+  object NewNote : NoteDetailUiAction
 }
 
 @Parcelize
