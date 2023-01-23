@@ -8,8 +8,18 @@ import com.jshvarts.todoapp.data.Note
 import kotlinx.parcelize.Parcelize
 
 sealed interface NoteDetailUiAction : UiAction {
-  data class LoadNote(val id: Int) : NoteDetailUiAction
-  object NewNote : NoteDetailUiAction
+  data class LoadNote(
+    val id: Int,
+    val forEditing: Boolean = false
+  ) : NoteDetailUiAction
+
+  data class SaveNote(
+    val id: Int,
+    val title: String,
+    val completed: Boolean
+  ) : NoteDetailUiAction
+
+  data class DeleteNote(val id: Int) : NoteDetailUiAction
 }
 
 @Parcelize
@@ -17,7 +27,8 @@ sealed class NoteDetailUiState : UiState, Parcelable {
   object Loading : NoteDetailUiState()
 
   data class Success(
-    val note: Note
+    val note: Note,
+    val forEditing: Boolean = false
   ) : NoteDetailUiState()
 
   data class Error(
@@ -26,5 +37,8 @@ sealed class NoteDetailUiState : UiState, Parcelable {
 }
 
 sealed interface NoteDetailUiEffect : UiEffect {
-  object RequestSubmitted : NoteDetailUiEffect
+  object EditFailure : NoteDetailUiEffect
+  object EditSuccess : NoteDetailUiEffect
+  object DeleteFailure : NoteDetailUiEffect
+  object DeleteSuccess : NoteDetailUiEffect
 }

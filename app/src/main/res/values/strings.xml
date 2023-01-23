@@ -9,4 +9,12 @@
     <string name="delete_icon">Delete todo</string>
     <string name="delete_failed_message">Delete failed. Please try again.</string>
     <string name="add_note">Add note</string>
+    <string name="note_title">title</string>
+    <string name="save_failure_message">Save failed. Please try again.</string>
+    <string name="save_success_message">Note saved successfully</string>
+    <string name="note">Note</string>
+    <string name="edit_note">Edit note</string>
+    <string name="editing">Editing</string>
+    <string name="done">Done</string>
+    <string name="delete_failure_message">Delete failed</string>
 </resources>

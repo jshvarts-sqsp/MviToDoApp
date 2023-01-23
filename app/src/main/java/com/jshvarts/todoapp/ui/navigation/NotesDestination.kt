@@ -22,3 +22,7 @@ object NoteDetail : NotesDestination {
     }
   )
 }
+
+object AddNote : NotesDestination {
+  override val route: String = "add_note"
+}

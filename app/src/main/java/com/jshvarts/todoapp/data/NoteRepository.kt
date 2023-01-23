@@ -7,5 +7,6 @@ interface NoteRepository {
   fun getNote(id: Int): Flow<Note>
   suspend fun refreshNotes(): Result<Unit>
   suspend fun deleteNote(id: Int): Result<Unit>
-  suspend fun addNote(note: Note): Result<Unit>
+  suspend fun addNote(title: String): Result<Unit>
+  suspend fun updateNote(note: Note): Result<Unit>
 }

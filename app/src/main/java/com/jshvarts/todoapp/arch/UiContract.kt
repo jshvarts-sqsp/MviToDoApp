@@ -11,10 +11,6 @@ interface UiState
 
 interface UiEffect
 
-interface UiMapper<T, R> {
-  fun toUi(item: T): R
-}
-
 sealed interface UiResult<out T> {
   data class Success<T>(val data: T) : UiResult<T>
   data class Error(val exception: Throwable? = null) : UiResult<Nothing>
