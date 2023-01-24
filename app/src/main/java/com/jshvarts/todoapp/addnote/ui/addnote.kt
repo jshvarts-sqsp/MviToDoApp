@@ -17,6 +17,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.jshvarts.todoapp.R
+import com.jshvarts.todoapp.addnote.AddNoteAction
+import com.jshvarts.todoapp.addnote.AddNoteEffect
 import com.jshvarts.todoapp.addnote.AddNoteViewModel
 import com.jshvarts.todoapp.data.NoteValidator
 
@@ -37,12 +39,12 @@ fun AddNoteScreen(
 
   LaunchedEffect(scaffoldState.snackbarHostState) {
     lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-      viewModel.uiEffect.collect {
+      viewModel.effect.collect {
         when (it) {
-          AddNoteUiEffect.SaveNoteFailure -> {
+          AddNoteEffect.SaveNoteFailure -> {
             scaffoldState.snackbarHostState.showSnackbar(message = saveFailureMessage)
           }
-          AddNoteUiEffect.SaveNoteSuccess -> {
+          AddNoteEffect.SaveNoteSuccess -> {
             scaffoldState.snackbarHostState.showSnackbar(message = saveSuccessMessage)
             onNoteSaved.invoke()
           }
@@ -68,7 +70,7 @@ fun AddNoteScreen(
         actions = {
           IconButton(
             onClick = {
-              viewModel.dispatchAction(AddNoteUiAction.SaveNote(title))
+              viewModel.dispatchAction(AddNoteAction.SaveNote(title))
             },
             enabled = saveEnabled
           ) {

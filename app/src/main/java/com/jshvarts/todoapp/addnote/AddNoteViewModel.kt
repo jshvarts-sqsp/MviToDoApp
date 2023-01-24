@@ -1,11 +1,8 @@
 package com.jshvarts.todoapp.addnote
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.jshvarts.todoapp.addnote.ui.AddNoteUiAction
-import com.jshvarts.todoapp.addnote.ui.AddNoteUiEffect
-import com.jshvarts.todoapp.arch.ActionConsumer
 import com.jshvarts.todoapp.arch.EffectProducer
+import com.jshvarts.todoapp.arch.MviViewModel
 import com.jshvarts.todoapp.data.NoteRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -16,27 +13,26 @@ import javax.inject.Inject
 @HiltViewModel
 class AddNoteViewModel @Inject constructor(
   private val noteRepository: NoteRepository
-) : ViewModel(),
-  ActionConsumer<AddNoteUiAction>,
-  EffectProducer<AddNoteUiEffect> {
+) : MviViewModel<AddNoteAction>(),
+  EffectProducer<AddNoteEffect> {
 
-  private val _uiEffect = Channel<AddNoteUiEffect>()
-  override val uiEffect: Flow<AddNoteUiEffect> = _uiEffect.receiveAsFlow()
+  private val _effect = Channel<AddNoteEffect>()
+  override val effect: Flow<AddNoteEffect> = _effect.receiveAsFlow()
 
-  override fun dispatchAction(action: AddNoteUiAction) {
+  override fun dispatchAction(action: AddNoteAction) {
     when (action) {
-      is AddNoteUiAction.SaveNote -> onSaveNoteRequested(action)
+      is AddNoteAction.SaveNote -> onSaveNoteRequested(action)
     }
   }
 
-  private fun onSaveNoteRequested(action: AddNoteUiAction.SaveNote) {
+  private fun onSaveNoteRequested(action: AddNoteAction.SaveNote) {
     viewModelScope.launch {
       noteRepository.addNote(action.title)
         .onSuccess {
-          _uiEffect.send(AddNoteUiEffect.SaveNoteSuccess)
+          _effect.send(AddNoteEffect.SaveNoteSuccess)
         }
         .onFailure {
-          _uiEffect.send(AddNoteUiEffect.SaveNoteFailure)
+          _effect.send(AddNoteEffect.SaveNoteFailure)
         }
     }
   }

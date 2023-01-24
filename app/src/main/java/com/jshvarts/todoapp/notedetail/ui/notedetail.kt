@@ -20,6 +20,9 @@ import com.jshvarts.todoapp.ErrorState
 import com.jshvarts.todoapp.LoadingState
 import com.jshvarts.todoapp.R
 import com.jshvarts.todoapp.data.NoteValidator
+import com.jshvarts.todoapp.notedetail.NoteDetailAction
+import com.jshvarts.todoapp.notedetail.NoteDetailEffect
+import com.jshvarts.todoapp.notedetail.NoteDetailState
 import com.jshvarts.todoapp.notedetail.NoteDetailViewModel
 
 @Composable
@@ -31,7 +34,7 @@ fun NoteDetailScreen(
   viewModel: NoteDetailViewModel = hiltViewModel(),
   scaffoldState: ScaffoldState = rememberScaffoldState()
 ) {
-  val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+  val uiState by viewModel.state.collectAsStateWithLifecycle()
 
   val saveFailureMessage = stringResource(id = R.string.save_failure_message)
   val saveSuccessMessage = stringResource(id = R.string.save_success_message)
@@ -41,16 +44,16 @@ fun NoteDetailScreen(
 
   LaunchedEffect(scaffoldState.snackbarHostState) {
     lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-      viewModel.uiEffect.collect {
+      viewModel.effect.collect {
         when (it) {
-          NoteDetailUiEffect.EditSuccess -> {
+          NoteDetailEffect.EditSuccess -> {
             scaffoldState.snackbarHostState.showSnackbar(message = saveSuccessMessage)
           }
-          NoteDetailUiEffect.EditFailure -> {
+          NoteDetailEffect.EditFailure -> {
             scaffoldState.snackbarHostState.showSnackbar(message = saveFailureMessage)
           }
-          NoteDetailUiEffect.DeleteSuccess -> onNoteDeleted.invoke()
-          NoteDetailUiEffect.DeleteFailure -> {
+          NoteDetailEffect.DeleteSuccess -> onNoteDeleted.invoke()
+          NoteDetailEffect.DeleteFailure -> {
             scaffoldState.snackbarHostState.showSnackbar(message = deleteFailureMessage)
           }
         }
@@ -59,22 +62,22 @@ fun NoteDetailScreen(
   }
 
   LaunchedEffect(Unit) {
-    viewModel.dispatchAction(NoteDetailUiAction.LoadNote(noteId))
+    viewModel.dispatchAction(NoteDetailAction.LoadNote(noteId))
   }
 
   when (uiState) {
-    NoteDetailUiState.Loading -> LoadingState()
-    is NoteDetailUiState.Success -> NoteDetailSuccessState(
-      uiState as NoteDetailUiState.Success,
+    NoteDetailState.Loading -> LoadingState()
+    is NoteDetailState.Success -> NoteDetailSuccessState(
+      uiState as NoteDetailState.Success,
       noteValidator = noteValidator
     )
-    is NoteDetailUiState.Error -> ErrorState((uiState as NoteDetailUiState.Error).throwable?.message.orEmpty())
+    is NoteDetailState.Error -> ErrorState((uiState as NoteDetailState.Error).throwable?.message.orEmpty())
   }
 }
 
 @Composable
 fun NoteDetailSuccessState(
-  uiState: NoteDetailUiState.Success,
+  uiState: NoteDetailState.Success,
   noteValidator: NoteValidator,
   viewModel: NoteDetailViewModel = hiltViewModel(),
   modifier: Modifier = Modifier,
@@ -95,7 +98,7 @@ fun NoteDetailSuccessState(
             IconButton(
               onClick = {
                 viewModel.dispatchAction(
-                  NoteDetailUiAction.SaveNote(
+                  NoteDetailAction.SaveNote(
                     id = uiState.note.id,
                     title = title,
                     completed = completed
@@ -137,7 +140,7 @@ fun NoteDetailSuccessState(
         Text(text = "Completed? $completed")
         Switch(checked = completed, onCheckedChange = { completed = it })
         Button(onClick = {
-          viewModel.dispatchAction(NoteDetailUiAction.DeleteNote(uiState.note.id))
+          viewModel.dispatchAction(NoteDetailAction.DeleteNote(uiState.note.id))
         }) {
           Text(text = "Delete", color = Color.White)
         }
@@ -150,7 +153,7 @@ fun NoteDetailSuccessState(
           actions = {
             IconButton(onClick = {
               viewModel.dispatchAction(
-                NoteDetailUiAction.LoadNote(
+                NoteDetailAction.LoadNote(
                   id = uiState.note.id,
                   forEditing = true
                 )

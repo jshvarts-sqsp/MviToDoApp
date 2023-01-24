@@ -1,14 +1,10 @@
 package com.jshvarts.todoapp.notedetail
 
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jshvarts.todoapp.arch.*
 import com.jshvarts.todoapp.data.Note
 import com.jshvarts.todoapp.data.NoteRepository
-import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiAction
-import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiEffect
-import com.jshvarts.todoapp.notedetail.ui.NoteDetailUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -23,43 +19,42 @@ private const val SAVED_STATE_HANDLE_KEY = "NoteDetailViewModel_uiState_Key"
 class NoteDetailViewModel @Inject constructor(
   private val savedStateHandle: SavedStateHandle,
   private val noteRepository: NoteRepository
-) : ViewModel(),
-  ActionConsumer<NoteDetailUiAction>,
-  StateProducer<NoteDetailUiState>,
-  EffectProducer<NoteDetailUiEffect> {
-  override val initialState: NoteDetailUiState = NoteDetailUiState.Loading
+) : MviViewModel<NoteDetailAction>(),
+  StateProducer<NoteDetailState>,
+  EffectProducer<NoteDetailEffect> {
+  override val initialState: NoteDetailState = NoteDetailState.Loading
 
   override val savedStateHandleKey: String = SAVED_STATE_HANDLE_KEY
 
-  override val uiState: StateFlow<NoteDetailUiState> =
+  override val state: StateFlow<NoteDetailState> =
     savedStateHandle.getStateFlow(savedStateHandleKey, initialState)
 
-  private val _uiEffect = Channel<NoteDetailUiEffect>()
-  override val uiEffect: Flow<NoteDetailUiEffect> = _uiEffect.receiveAsFlow()
+  private val _effect = Channel<NoteDetailEffect>()
+  override val effect: Flow<NoteDetailEffect> = _effect.receiveAsFlow()
 
-  override fun dispatchAction(action: NoteDetailUiAction) {
+  override fun dispatchAction(action: NoteDetailAction) {
     when (action) {
-      is NoteDetailUiAction.LoadNote -> onLoadNote(action)
-      is NoteDetailUiAction.SaveNote -> onSaveNote(action)
-      is NoteDetailUiAction.DeleteNote -> onDeleteNote(action)
+      is NoteDetailAction.LoadNote -> onLoadNote(action)
+      is NoteDetailAction.SaveNote -> onSaveNote(action)
+      is NoteDetailAction.DeleteNote -> onDeleteNote(action)
     }
   }
 
-  private fun onLoadNote(action: NoteDetailUiAction.LoadNote) {
+  private fun onLoadNote(action: NoteDetailAction.LoadNote) {
     viewModelScope.launch {
       noteRepository
-        .getNote(action.id).asUiResult()
+        .getNote(action.id).asResult()
         .collect { result ->
           savedStateHandle[SAVED_STATE_HANDLE_KEY] = when (result) {
-            is UiResult.Loading -> NoteDetailUiState.Loading
-            is UiResult.Success -> NoteDetailUiState.Success(note = result.data, forEditing = action.forEditing)
-            is UiResult.Error -> NoteDetailUiState.Error(result.exception)
+            is Result.Loading -> NoteDetailState.Loading
+            is Result.Success -> NoteDetailState.Success(note = result.data, forEditing = action.forEditing)
+            is Result.Error -> NoteDetailState.Error(result.exception)
           }
         }
     }
   }
 
-  private fun onSaveNote(action: NoteDetailUiAction.SaveNote) {
+  private fun onSaveNote(action: NoteDetailAction.SaveNote) {
     viewModelScope.launch {
       val note = Note(
         id = action.id,
@@ -68,24 +63,24 @@ class NoteDetailViewModel @Inject constructor(
       )
       noteRepository.updateNote(note)
         .onSuccess {
-          savedStateHandle[SAVED_STATE_HANDLE_KEY] = NoteDetailUiState.Success(note = note, forEditing = false)
-          _uiEffect.send(NoteDetailUiEffect.EditSuccess)
+          savedStateHandle[SAVED_STATE_HANDLE_KEY] = NoteDetailState.Success(note = note, forEditing = false)
+          _effect.send(NoteDetailEffect.EditSuccess)
         }
         .onFailure {
-          savedStateHandle[SAVED_STATE_HANDLE_KEY] = NoteDetailUiState.Success(note = note, forEditing = true)
-          _uiEffect.send(NoteDetailUiEffect.EditFailure)
+          savedStateHandle[SAVED_STATE_HANDLE_KEY] = NoteDetailState.Success(note = note, forEditing = true)
+          _effect.send(NoteDetailEffect.EditFailure)
         }
     }
   }
 
-  private fun onDeleteNote(action: NoteDetailUiAction.DeleteNote) {
+  private fun onDeleteNote(action: NoteDetailAction.DeleteNote) {
     viewModelScope.launch {
       noteRepository.deleteNote(action.id)
         .onSuccess {
-          _uiEffect.send(NoteDetailUiEffect.DeleteSuccess)
+          _effect.send(NoteDetailEffect.DeleteSuccess)
         }
         .onFailure {
-          _uiEffect.send(NoteDetailUiEffect.DeleteFailure)
+          _effect.send(NoteDetailEffect.DeleteFailure)
         }
     }
   }
