@@ -36,11 +36,17 @@ class NoteListViewModel @Inject constructor(
   override val effect: Flow<NoteListEffect> = _effect.receiveAsFlow()
 
   private val pendingTodos: Flow<Result<List<Note>>> =
-    noteRepository.getNotes(isCompleted = false)
+    noteRepository.getNotes()
+      .map { notes ->
+        notes.filter { !it.completed }
+      }
       .asResult()
 
   private val completedTodos: Flow<Result<List<Note>>> =
-    noteRepository.getNotes(isCompleted = true)
+    noteRepository.getNotes()
+      .map { notes ->
+        notes.filter { it.completed }
+      }
       .asResult()
 
   override val state: StateFlow<NoteListState> = combine(pendingTodos, completedTodos) { pendingTodosResult, completedTodosResult ->
