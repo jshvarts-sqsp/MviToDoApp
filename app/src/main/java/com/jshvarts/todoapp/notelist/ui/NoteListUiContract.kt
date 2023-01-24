@@ -35,7 +35,6 @@ data class NoteListUiState(
 ) : UiState, Parcelable
 
 sealed interface NoteListUiEffect : UiEffect {
-  object Initial
   object RefreshFailed : NoteListUiEffect
   object DeleteFailed : NoteListUiEffect
 }

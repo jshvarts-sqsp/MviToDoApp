@@ -19,7 +19,7 @@ class OfflineFirstNoteRepository @Inject constructor(
   private val noteIdFactory: NoteIdFactory
 ) : NoteRepository {
   override fun getNotes(isCompleted: Boolean): Flow<List<Note>> {
-    return notesDao.getNotes(isCompleted).map { entities ->
+    return notesDao.getNotesAsFlow(isCompleted).map { entities ->
       entities.map(NoteEntity::asNote)
     }.onEach {
       if (it.isEmpty()) {
@@ -29,7 +29,7 @@ class OfflineFirstNoteRepository @Inject constructor(
   }
 
   override fun getNote(id: Int): Flow<Note> {
-    return notesDao.getNote(id).map { entity ->
+    return notesDao.getNoteAsFlow(id).map { entity ->
       entity.let(NoteEntity::asNote)
     }.onEmpty {
       refreshNotes()
@@ -50,20 +50,32 @@ class OfflineFirstNoteRepository @Inject constructor(
 
   override suspend fun deleteNote(id: Int): Result<Unit> {
     return kotlin.runCatching {
-      notesDao.getNote(id).collect {
+      notesDao.getNote(id).let {
         notesDao.deleteNote(it)
       }
     }
   }
 
-  override suspend fun addNote(note: Note): Result<Unit> {
+  override suspend fun addNote(title: String): Result<Unit> {
     return kotlin.runCatching {
       val nextId = noteIdFactory.getNextAvailableId()
       val noteEntity = NoteEntity(
         id = nextId,
+        title = title,
+        completed = false
+      )
+      notesDao.insertNote(noteEntity)
+    }
+  }
+
+  override suspend fun updateNote(note: Note): Result<Unit> {
+    return kotlin.runCatching {
+      val noteEntity = NoteEntity(
+        id = note.id,
         title = note.title,
         completed = note.completed
       )
+      // if note with given id exists, it will be updated
       notesDao.insertNote(noteEntity)
     }
   }

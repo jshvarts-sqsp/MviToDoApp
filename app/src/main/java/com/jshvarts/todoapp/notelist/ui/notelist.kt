@@ -22,11 +22,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
 import com.google.accompanist.pager.pagerTabIndicatorOffset
@@ -45,25 +48,23 @@ fun NoteListScreen(
   onNoteClick: (Int) -> Unit,
   onAddNoteClick: () -> Unit,
   modifier: Modifier = Modifier,
-  viewModel: NoteListViewModel = hiltViewModel()
+  viewModel: NoteListViewModel = hiltViewModel(),
+  scaffoldState: ScaffoldState = rememberScaffoldState()
 ) {
   val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-  val uiEffect by viewModel.uiEffect.collectAsStateWithLifecycle(NoteListUiEffect.Initial)
-  val scaffoldState = rememberScaffoldState()
   val refreshFailedMessage = stringResource(id = R.string.refresh_failed_message)
   val deleteFailedMessage = stringResource(id = R.string.delete_failed_message)
-  val scope = rememberCoroutineScope()
+
+  val lifecycleOwner = LocalLifecycleOwner.current
 
   LaunchedEffect(scaffoldState.snackbarHostState) {
-    scope.launch {
-      when (uiEffect) {
-        NoteListUiEffect.RefreshFailed -> {
-          viewModel.uiEffect.collect {
+    lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+      viewModel.uiEffect.collect {
+        when (it) {
+          NoteListUiEffect.RefreshFailed -> {
             scaffoldState.snackbarHostState.showSnackbar(message = refreshFailedMessage)
           }
-        }
-        NoteListUiEffect.DeleteFailed -> {
-          viewModel.uiEffect.collect {
+          NoteListUiEffect.DeleteFailed -> {
             scaffoldState.snackbarHostState.showSnackbar(message = deleteFailedMessage)
           }
         }

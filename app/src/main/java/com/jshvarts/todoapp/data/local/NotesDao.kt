@@ -6,13 +6,16 @@ import kotlinx.coroutines.flow.Flow
 @Dao
 interface NotesDao {
   @Query(value = "SELECT * FROM note ORDER BY id DESC")
-  fun getNotes(): Flow<List<NoteEntity>>
+  fun getNotesAsFlow(): Flow<List<NoteEntity>>
 
   @Query(value = "SELECT * FROM note WHERE completed = :completed ORDER BY id DESC")
-  fun getNotes(completed: Boolean): Flow<List<NoteEntity>>
+  fun getNotesAsFlow(completed: Boolean): Flow<List<NoteEntity>>
 
   @Query(value = "SELECT * FROM note WHERE id = :id")
-  fun getNote(id: Int): Flow<NoteEntity>
+  fun getNoteAsFlow(id: Int): Flow<NoteEntity>
+
+  @Query(value = "SELECT * FROM note WHERE id = :id")
+  suspend fun getNote(id: Int): NoteEntity
 
   @Delete
   suspend fun deleteNote(entity: NoteEntity)
