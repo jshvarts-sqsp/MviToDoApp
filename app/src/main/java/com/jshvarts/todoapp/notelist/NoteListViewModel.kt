@@ -1,14 +1,9 @@
 package com.jshvarts.todoapp.notelist
 
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.jshvarts.todoapp.arch.*
 import com.jshvarts.todoapp.data.Note
 import com.jshvarts.todoapp.data.NoteRepository
-import com.jshvarts.todoapp.notelist.ui.NoteListTodosUiState
-import com.jshvarts.todoapp.notelist.ui.NoteListUiAction
-import com.jshvarts.todoapp.notelist.ui.NoteListUiEffect
-import com.jshvarts.todoapp.notelist.ui.NoteListUiState
 import com.jshvarts.todoapp.ui.WhileUiSubscribed
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -19,52 +14,51 @@ import javax.inject.Inject
 @HiltViewModel
 class NoteListViewModel @Inject constructor(
   private val noteRepository: NoteRepository
-) : ViewModel(),
-  ActionConsumer<NoteListUiAction>,
-  StateProducer<NoteListUiState>,
-  EffectProducer<NoteListUiEffect> {
+) : MviViewModel<NoteListAction>(),
+  StateProducer<NoteListState>,
+  EffectProducer<NoteListEffect> {
 
-  override val initialState: NoteListUiState = NoteListUiState(
-    pendingTodosUiState = NoteListTodosUiState.Loading,
-    completedTodosUiState = NoteListTodosUiState.Loading
+  override val initialState: NoteListState = NoteListState(
+    pendingTodosState = NoteListTodosState.Loading,
+    completedTodosState = NoteListTodosState.Loading
   )
 
   override val savedStateHandleKey = null
 
-  override fun dispatchAction(action: NoteListUiAction) {
+  override fun dispatchAction(action: NoteListAction) {
     when (action) {
-      NoteListUiAction.PullToRefresh -> onPullToRefresh()
-      is NoteListUiAction.SwipeToDelete -> onDeleteNote(action)
+      NoteListAction.PullToRefresh -> onPullToRefresh()
+      is NoteListAction.SwipeToDelete -> onDeleteNote(action)
     }
   }
 
-  private val _uiEffect = Channel<NoteListUiEffect>()
-  override val uiEffect: Flow<NoteListUiEffect> = _uiEffect.receiveAsFlow()
+  private val _effect = Channel<NoteListEffect>()
+  override val effect: Flow<NoteListEffect> = _effect.receiveAsFlow()
 
-  private val pendingTodos: Flow<UiResult<List<Note>>> =
+  private val pendingTodos: Flow<Result<List<Note>>> =
     noteRepository.getNotes(isCompleted = false)
-      .asUiResult()
+      .asResult()
 
-  private val completedTodos: Flow<UiResult<List<Note>>> =
+  private val completedTodos: Flow<Result<List<Note>>> =
     noteRepository.getNotes(isCompleted = true)
-      .asUiResult()
+      .asResult()
 
-  override val uiState: StateFlow<NoteListUiState> = combine(pendingTodos, completedTodos) { pendingTodosResult, completedTodosResult ->
-    val pendingTodosUiState = when (pendingTodosResult) {
-      is UiResult.Loading -> NoteListTodosUiState.Loading
-      is UiResult.Success -> NoteListTodosUiState.Success(pendingTodosResult.data)
-      is UiResult.Error -> NoteListTodosUiState.Error(pendingTodosResult.exception)
+  override val state: StateFlow<NoteListState> = combine(pendingTodos, completedTodos) { pendingTodosResult, completedTodosResult ->
+    val pendingTodosState = when (pendingTodosResult) {
+      is Result.Loading -> NoteListTodosState.Loading
+      is Result.Success -> NoteListTodosState.Success(pendingTodosResult.data)
+      is Result.Error -> NoteListTodosState.Error(pendingTodosResult.exception)
     }
 
-    val completedTodosUiState = when (completedTodosResult) {
-      is UiResult.Loading -> NoteListTodosUiState.Loading
-      is UiResult.Success -> NoteListTodosUiState.Success(completedTodosResult.data)
-      is UiResult.Error -> NoteListTodosUiState.Error(completedTodosResult.exception)
+    val completedTodosState = when (completedTodosResult) {
+      is Result.Loading -> NoteListTodosState.Loading
+      is Result.Success -> NoteListTodosState.Success(completedTodosResult.data)
+      is Result.Error -> NoteListTodosState.Error(completedTodosResult.exception)
     }
 
-    NoteListUiState(
-      pendingTodosUiState = pendingTodosUiState,
-      completedTodosUiState = completedTodosUiState
+    NoteListState(
+      pendingTodosState = pendingTodosState,
+      completedTodosState = completedTodosState
     )
   }.stateIn(
     scope = viewModelScope,
@@ -76,16 +70,16 @@ class NoteListViewModel @Inject constructor(
     viewModelScope.launch {
       noteRepository.refreshNotes()
         .onFailure {
-          _uiEffect.send(NoteListUiEffect.RefreshFailed)
+          _effect.send(NoteListEffect.RefreshFailed)
         }
     }
   }
 
-  private fun onDeleteNote(action: NoteListUiAction.SwipeToDelete) {
+  private fun onDeleteNote(action: NoteListAction.SwipeToDelete) {
     viewModelScope.launch {
       noteRepository.deleteNote(action.id)
         .onFailure {
-          _uiEffect.send(NoteListUiEffect.DeleteFailed)
+          _effect.send(NoteListEffect.DeleteFailed)
         }
     }
   }

@@ -38,7 +38,7 @@ import com.jshvarts.todoapp.ErrorState
 import com.jshvarts.todoapp.LoadingState
 import com.jshvarts.todoapp.R
 import com.jshvarts.todoapp.data.Note
-import com.jshvarts.todoapp.notelist.NoteListViewModel
+import com.jshvarts.todoapp.notelist.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -51,7 +51,7 @@ fun NoteListScreen(
   viewModel: NoteListViewModel = hiltViewModel(),
   scaffoldState: ScaffoldState = rememberScaffoldState()
 ) {
-  val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+  val uiState by viewModel.state.collectAsStateWithLifecycle()
   val refreshFailedMessage = stringResource(id = R.string.refresh_failed_message)
   val deleteFailedMessage = stringResource(id = R.string.delete_failed_message)
 
@@ -59,12 +59,12 @@ fun NoteListScreen(
 
   LaunchedEffect(scaffoldState.snackbarHostState) {
     lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-      viewModel.uiEffect.collect {
+      viewModel.effect.collect {
         when (it) {
-          NoteListUiEffect.RefreshFailed -> {
+          NoteListEffect.RefreshFailed -> {
             scaffoldState.snackbarHostState.showSnackbar(message = refreshFailedMessage)
           }
-          NoteListUiEffect.DeleteFailed -> {
+          NoteListEffect.DeleteFailed -> {
             scaffoldState.snackbarHostState.showSnackbar(message = deleteFailedMessage)
           }
         }
@@ -104,7 +104,7 @@ fun NoteListScreen(
       onNoteClick = onNoteClick,
       onSwipeToDelete = { note ->
         viewModel.dispatchAction(
-          NoteListUiAction.SwipeToDelete(note.id)
+          NoteListAction.SwipeToDelete(note.id)
         )
       }
     )
@@ -114,7 +114,7 @@ fun NoteListScreen(
 @OptIn(ExperimentalPagerApi::class, ExperimentalMaterialApi::class)
 @Composable
 fun NoteListSuccessState(
-  uiState: NoteListUiState,
+  uiState: NoteListState,
   onNoteClick: (Int) -> Unit,
   onSwipeToDelete: (Note) -> Unit,
   viewModel: NoteListViewModel = hiltViewModel(),
@@ -134,7 +134,7 @@ fun NoteListSuccessState(
   fun refresh() = refreshScope.launch {
     refreshing = true
     delay(300)
-    viewModel.dispatchAction(NoteListUiAction.PullToRefresh)
+    viewModel.dispatchAction(NoteListAction.PullToRefresh)
     refreshing = false
   }
 
@@ -175,12 +175,12 @@ fun NoteListSuccessState(
     ) { tabIndex ->
       Box(Modifier.pullRefresh(pullRefreshState)) {
         if (tabIndex == 0) {
-          when (uiState.pendingTodosUiState) {
-            is NoteListTodosUiState.Error -> ErrorState(uiState.pendingTodosUiState.throwable?.message.orEmpty())
-            NoteListTodosUiState.Loading -> LoadingState()
-            is NoteListTodosUiState.Success -> {
+          when (uiState.pendingTodosState) {
+            is NoteListTodosState.Error -> ErrorState(uiState.pendingTodosState.throwable?.message.orEmpty())
+            NoteListTodosState.Loading -> LoadingState()
+            is NoteListTodosState.Success -> {
               TodosSuccessState(
-                data = uiState.pendingTodosUiState.data,
+                data = uiState.pendingTodosState.data,
                 emptyTodosResId = emptyTodosResId,
                 onNoteClick = onNoteClick,
                 onSwipeToDelete = onSwipeToDelete
@@ -188,12 +188,12 @@ fun NoteListSuccessState(
             }
           }
         } else {
-          when (uiState.completedTodosUiState) {
-            is NoteListTodosUiState.Error -> ErrorState(uiState.completedTodosUiState.throwable?.message.orEmpty())
-            NoteListTodosUiState.Loading -> LoadingState()
-            is NoteListTodosUiState.Success -> {
+          when (uiState.completedTodosState) {
+            is NoteListTodosState.Error -> ErrorState(uiState.completedTodosState.throwable?.message.orEmpty())
+            NoteListTodosState.Loading -> LoadingState()
+            is NoteListTodosState.Success -> {
               TodosSuccessState(
-                data = uiState.completedTodosUiState.data,
+                data = uiState.completedTodosState.data,
                 emptyTodosResId = emptyTodosResId,
                 onNoteClick = onNoteClick,
                 onSwipeToDelete = onSwipeToDelete
