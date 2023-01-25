@@ -18,8 +18,8 @@ class OfflineFirstNoteRepository @Inject constructor(
   private val notesDao: NotesDao,
   private val noteIdFactory: NoteIdFactory
 ) : NoteRepository {
-  override fun getNotes(isCompleted: Boolean): Flow<List<Note>> {
-    return notesDao.getNotesAsFlow(isCompleted).map { entities ->
+  override fun getNotes(): Flow<List<Note>> {
+    return notesDao.getNotesAsFlow().map { entities ->
       entities.map(NoteEntity::asNote)
     }.onEach {
       if (it.isEmpty()) {
