@@ -1,7 +1,10 @@
 package com.jshvarts.todoapp.notelist
 
 import androidx.lifecycle.viewModelScope
-import com.jshvarts.todoapp.arch.*
+import com.jshvarts.todoapp.arch.EffectProducer
+import com.jshvarts.todoapp.arch.MviViewModel
+import com.jshvarts.todoapp.arch.Result
+import com.jshvarts.todoapp.arch.asResult
 import com.jshvarts.todoapp.data.Note
 import com.jshvarts.todoapp.data.NoteRepository
 import com.jshvarts.todoapp.ui.WhileUiSubscribed
@@ -14,8 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class NoteListViewModel @Inject constructor(
   private val noteRepository: NoteRepository
-) : MviViewModel<NoteListAction>(),
-  StateProducer<NoteListState>,
+) : MviViewModel<NoteListAction, NoteListState>(),
   EffectProducer<NoteListEffect> {
 
   override val initialState: NoteListState = NoteListState(

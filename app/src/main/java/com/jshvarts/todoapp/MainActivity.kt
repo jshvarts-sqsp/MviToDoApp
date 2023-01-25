@@ -14,16 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.compose.rememberNavController
-import com.jshvarts.todoapp.data.NoteValidator
 import com.jshvarts.todoapp.ui.navigation.NotesAppNavHost
 import com.jshvarts.todoapp.ui.theme.ToDoAppTheme
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-  @Inject
-  lateinit var noteValidator: NoteValidator
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -32,7 +28,7 @@ class MainActivity : ComponentActivity() {
         // A surface container using the 'background' color from the theme
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colors.background) {
           val navController = rememberNavController()
-          NotesAppNavHost(navController, noteValidator)
+          NotesAppNavHost(navController)
         }
       }
     }

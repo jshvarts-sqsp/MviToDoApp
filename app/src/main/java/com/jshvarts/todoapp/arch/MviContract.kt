@@ -8,12 +8,6 @@ interface State
 
 interface Effect
 
-interface StateProducer<S : State> {
-  val initialState: S
-  val state: StateFlow<S>
-  val savedStateHandleKey: String?
-}
-
 interface EffectProducer<E : Effect> {
   val effect: Flow<E>
 }

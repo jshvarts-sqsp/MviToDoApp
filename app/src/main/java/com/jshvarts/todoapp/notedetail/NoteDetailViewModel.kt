@@ -2,9 +2,13 @@ package com.jshvarts.todoapp.notedetail
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.viewModelScope
-import com.jshvarts.todoapp.arch.*
+import com.jshvarts.todoapp.arch.EffectProducer
+import com.jshvarts.todoapp.arch.MviViewModel
+import com.jshvarts.todoapp.arch.Result
+import com.jshvarts.todoapp.arch.asResult
 import com.jshvarts.todoapp.data.Note
 import com.jshvarts.todoapp.data.NoteRepository
+import com.jshvarts.todoapp.data.NoteValidator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -13,14 +17,14 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-private const val SAVED_STATE_HANDLE_KEY = "NoteDetailViewModel_uiState_Key"
+private const val SAVED_STATE_HANDLE_KEY = "NoteDetailViewModel_state_Key"
 
 @HiltViewModel
 class NoteDetailViewModel @Inject constructor(
   private val savedStateHandle: SavedStateHandle,
-  private val noteRepository: NoteRepository
-) : MviViewModel<NoteDetailAction>(),
-  StateProducer<NoteDetailState>,
+  private val noteRepository: NoteRepository,
+  private val noteValidator: NoteValidator
+) : MviViewModel<NoteDetailAction, NoteDetailState>(),
   EffectProducer<NoteDetailEffect> {
   override val initialState: NoteDetailState = NoteDetailState.Loading
 
@@ -35,6 +39,7 @@ class NoteDetailViewModel @Inject constructor(
   override fun dispatchAction(action: NoteDetailAction) {
     when (action) {
       is NoteDetailAction.LoadNote -> onLoadNote(action)
+      is NoteDetailAction.EditNote -> onEditNote(action)
       is NoteDetailAction.SaveNote -> onSaveNote(action)
       is NoteDetailAction.DeleteNote -> onDeleteNote(action)
     }
@@ -47,11 +52,22 @@ class NoteDetailViewModel @Inject constructor(
         .collect { result ->
           savedStateHandle[SAVED_STATE_HANDLE_KEY] = when (result) {
             is Result.Loading -> NoteDetailState.Loading
-            is Result.Success -> NoteDetailState.Success(note = result.data, forEditing = action.forEditing)
+            is Result.Success -> NoteDetailState.Success(note = result.data)
             is Result.Error -> NoteDetailState.Error(result.exception)
           }
         }
     }
+  }
+
+  private fun onEditNote(action: NoteDetailAction.EditNote) {
+    // todo debounce
+    val saveEnabled = noteValidator.isTitleValid(action.title)
+    savedStateHandle[SAVED_STATE_HANDLE_KEY] = NoteDetailState.EditNote(
+      id = action.id,
+      title = action.title,
+      completed = action.completed,
+      saveEnabled = saveEnabled
+    )
   }
 
   private fun onSaveNote(action: NoteDetailAction.SaveNote) {
@@ -63,11 +79,9 @@ class NoteDetailViewModel @Inject constructor(
       )
       noteRepository.updateNote(note)
         .onSuccess {
-          savedStateHandle[SAVED_STATE_HANDLE_KEY] = NoteDetailState.Success(note = note, forEditing = false)
           _effect.send(NoteDetailEffect.EditSuccess)
         }
         .onFailure {
-          savedStateHandle[SAVED_STATE_HANDLE_KEY] = NoteDetailState.Success(note = note, forEditing = true)
           _effect.send(NoteDetailEffect.EditFailure)
         }
     }

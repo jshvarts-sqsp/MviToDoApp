@@ -13,6 +13,13 @@ sealed interface NoteDetailAction : Action {
     val forEditing: Boolean = false
   ) : NoteDetailAction
 
+  data class EditNote(
+    val id: Int,
+    val title: String,
+    val completed: Boolean,
+    val forEditing: Boolean = false
+  ) : NoteDetailAction
+
   data class SaveNote(
     val id: Int,
     val title: String,
@@ -27,12 +34,18 @@ sealed class NoteDetailState : State, Parcelable {
   object Loading : NoteDetailState()
 
   data class Success(
-    val note: Note,
-    val forEditing: Boolean = false
+    val note: Note
   ) : NoteDetailState()
 
   data class Error(
     val throwable: Throwable? = null
+  ) : NoteDetailState()
+
+  data class EditNote(
+    val id: Int,
+    val title: String,
+    val completed: Boolean,
+    val saveEnabled: Boolean
   ) : NoteDetailState()
 }
 
