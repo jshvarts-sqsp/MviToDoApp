@@ -7,14 +7,12 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.jshvarts.todoapp.addnote.ui.AddNoteScreen
-import com.jshvarts.todoapp.data.NoteValidator
 import com.jshvarts.todoapp.notedetail.ui.NoteDetailScreen
 import com.jshvarts.todoapp.notelist.ui.NoteListScreen
 
 @Composable
 fun NotesAppNavHost(
   navController: NavHostController,
-  noteValidator: NoteValidator,
   modifier: Modifier = Modifier
 ) {
   NavHost(
@@ -39,7 +37,6 @@ fun NotesAppNavHost(
       val noteId = navBackStackEntry.arguments?.getInt(NoteDetail.noteIdArg)!!
       NoteDetailScreen(
         noteId = noteId,
-        noteValidator = noteValidator,
         onNoteDeleted = {
           navController.popBackStack()
         }
@@ -49,8 +46,7 @@ fun NotesAppNavHost(
       AddNoteScreen(
         onNoteSaved = {
           navController.popBackStack()
-        },
-        noteValidator = noteValidator
+        }
       )
     }
   }
