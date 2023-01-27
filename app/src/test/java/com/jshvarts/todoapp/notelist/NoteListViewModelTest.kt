@@ -41,7 +41,6 @@ class NoteListViewModelTest {
     assertEquals(viewModel.initialState, viewModel.state.value)
   }
 
-
   @Test
   fun `when PullToRefresh action is dispatched and repository fails, RefreshFailed effect is emitted`() = runTest {
     // GIVEN
