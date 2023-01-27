@@ -27,15 +27,15 @@ class NoteListViewModel @Inject constructor(
 
   override val savedStateHandleKey = null
 
+  private val _effect = Channel<NoteListEffect>()
+  override val effect: Flow<NoteListEffect> = _effect.receiveAsFlow()
+
   override fun dispatchAction(action: NoteListAction) {
     when (action) {
       NoteListAction.PullToRefresh -> onPullToRefresh()
       is NoteListAction.SwipeToDelete -> onDeleteNote(action)
     }
   }
-
-  private val _effect = Channel<NoteListEffect>()
-  override val effect: Flow<NoteListEffect> = _effect.receiveAsFlow()
 
   private val pendingTodos: Flow<Result<List<Note>>> =
     noteRepository.getNotes()

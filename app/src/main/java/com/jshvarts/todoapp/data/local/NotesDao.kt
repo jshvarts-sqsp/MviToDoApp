@@ -8,9 +8,6 @@ interface NotesDao {
   @Query(value = "SELECT * FROM note ORDER BY id DESC")
   fun getNotesAsFlow(): Flow<List<NoteEntity>>
 
-  @Query(value = "SELECT * FROM note WHERE completed = :completed ORDER BY id DESC")
-  fun getNotesAsFlow(completed: Boolean): Flow<List<NoteEntity>>
-
   @Query(value = "SELECT * FROM note WHERE id = :id")
   fun getNoteAsFlow(id: Int): Flow<NoteEntity>
 

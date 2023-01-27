@@ -10,7 +10,6 @@ import com.jshvarts.todoapp.data.remote.asEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
-import kotlinx.coroutines.flow.onEmpty
 import javax.inject.Inject
 
 class OfflineFirstNoteRepository @Inject constructor(
@@ -31,8 +30,6 @@ class OfflineFirstNoteRepository @Inject constructor(
   override fun getNote(id: Int): Flow<Note> {
     return notesDao.getNoteAsFlow(id).map { entity ->
       entity.let(NoteEntity::asNote)
-    }.onEmpty {
-      refreshNotes()
     }
   }
 
