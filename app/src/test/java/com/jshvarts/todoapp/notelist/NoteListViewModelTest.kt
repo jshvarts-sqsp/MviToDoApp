@@ -118,5 +118,8 @@ class NoteListViewModelTest {
         ), expectMostRecentItem()
       )
     }
+    viewModel.effect.test {
+      expectNoEvents()
+    }
   }
 }
