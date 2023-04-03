@@ -17,4 +17,5 @@
     <string name="editing">Editing</string>
     <string name="done">Done</string>
     <string name="delete_failure_message">Delete failed</string>
+    <string name="write_here">Write here…</string>
 </resources>
